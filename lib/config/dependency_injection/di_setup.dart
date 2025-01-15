@@ -29,7 +29,7 @@ abstract class DiModules {
     return CacheManager(
       Config(
         key,
-        stalePeriod: 30.days,
+        stalePeriod: 60.days,
         maxNrOfCacheObjects: 10000,
         repo: JsonCacheInfoRepository(databaseName: key),
         fileService: HttpFileService(),
@@ -37,4 +37,3 @@ abstract class DiModules {
     );
   }
 }
- 
