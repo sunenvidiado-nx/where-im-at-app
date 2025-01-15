@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    constant_identifier_names: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    sort_constructors_first: true
+    require_trailing_commas: true
+    prefer_single_quotes: true
+    always_use_package_imports: true
+    avoid_annotating_with_dynamic: true
+    avoid_empty_else: true
+    avoid_relative_lib_imports: true
+    sort_pub_dependencies: true
+    directives_ordering: true
