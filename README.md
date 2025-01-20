@@ -1,4 +1,4 @@
-# Where I'm At 📍🗺️
+# Where I'm At
 
 A Flutter app to share your current location with trusted contacts. Just tap, and let everyone know where you're at! 📍🌍
 
@@ -57,10 +57,10 @@ flutter run
 
 ## Technologies 🔧
 - Flutter & Dart 🦋
-- Firebase (Authentication, Firestore)
+- Firebase (Authentication, Firestore, Firebase Storage)
 - Stadia Maps
+- OpenStreetMap
 - OpenMapTiles
-- Waymarked Trails
 
 ## License 📄
 Distributed under the BSD 3-Clause License. See [`LICENSE`](LICENSE) for more information.
