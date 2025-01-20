@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:where_im_at/app/themes/app_colors.dart';
+import 'package:where_im_at/config/constants/ui_constants.dart';
 
 @module
 abstract class AppTheme {
@@ -9,17 +10,21 @@ abstract class AppTheme {
   ThemeData get theme {
     // TODO Implement dark theme
 
-    return ThemeData.from(
-      colorScheme: const ColorScheme.light(
-        primary: AppColors.red,
-        surface: AppColors.lightBackground,
-      ),
-    ).copyWith(
+    return ThemeData.from(colorScheme: _colorScheme).copyWith(
       scaffoldBackgroundColor: AppColors.lightBackground,
       textTheme: _textTheme,
       primaryTextTheme: _primaryTextTheme,
       inputDecorationTheme: _inputDecorationTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
+    );
+  }
+
+  ColorScheme get _colorScheme {
+    return ColorScheme.light(
+      primary: AppColors.black,
+      secondary: AppColors.red,
+      surface: AppColors.white,
+      shadow: AppColors.black.withAlpha(40),
     );
   }
 
@@ -84,18 +89,18 @@ abstract class AppTheme {
         fontWeight: FontWeight.bold,
       ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UiConstants.borderRadius),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UiConstants.borderRadius),
         borderSide: const BorderSide(
           color: AppColors.red,
           width: 2,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(UiConstants.borderRadius),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -109,7 +114,7 @@ abstract class AppTheme {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(UiConstants.borderRadius),
         ),
         textStyle: const TextStyle(
           fontSize: 16,

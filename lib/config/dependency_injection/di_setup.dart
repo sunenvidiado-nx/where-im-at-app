@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,6 +22,9 @@ abstract class DiModules {
       aOptions: AndroidOptions(encryptedSharedPreferences: true),
     );
   }
+
+  @singleton
+  FirebaseFirestore get firestore => FirebaseFirestore.instance;
 
   @Named(DiKeys.mapCacheManager)
   CacheManager get mapCacheManager {

@@ -1,8 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
-import 'package:latlng/latlng.dart';
 import 'package:where_im_at/l10n/app_localization.dart';
-import 'package:where_im_at/utils/extensions/position_extensions.dart';
 
 @singleton
 class LocationService {
@@ -34,8 +32,20 @@ class LocationService {
     }
   }
 
-  Future<LatLng> getCurrentLocation() async {
-    final position = await Geolocator.getCurrentPosition();
-    return position.toLatLng();
+  Future<Position> getCurrentLocation([
+    LocationAccuracy accuracy = LocationAccuracy.high,
+  ]) async {
+    return Geolocator.getCurrentPosition(
+      locationSettings:
+          LocationSettings(accuracy: accuracy, distanceFilter: 100),
+    );
   }
+
+  Stream<Position> streamCurrentLocation([
+    LocationAccuracy accuracy = LocationAccuracy.bestForNavigation,
+  ]) =>
+      Geolocator.getPositionStream(
+        locationSettings:
+            LocationSettings(accuracy: accuracy, distanceFilter: 100),
+      );
 }

@@ -21,7 +21,7 @@ abstract class RouterConfig {
         GoRoute(
           path: Routes.home,
           name: Routes.home,
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) => HomeScreen(),
         ),
         GoRoute(
           path: Routes.login,
