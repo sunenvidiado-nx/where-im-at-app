@@ -149,7 +149,7 @@ class _LoginScreenState extends ManagedState<LoginScreenStateManager,
                       );
 
                       // ignore: use_build_context_synchronously
-                      context.goNamed(Routes.root);
+                      if (state.didLogIn) context.go(Routes.home);
                     }
                   },
             child: Text(context.l10n.signInButton),

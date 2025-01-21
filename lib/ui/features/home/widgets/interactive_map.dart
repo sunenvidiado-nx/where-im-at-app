@@ -99,7 +99,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
       child: SafeArea(
         child: IconButton(
           icon: Icon(
-            Icons.location_on_outlined,
+            Icons.info_outline_rounded,
             color: context.colorScheme.primary.withAlpha(120),
           ),
           onPressed: _showAttributionBottomSheet,

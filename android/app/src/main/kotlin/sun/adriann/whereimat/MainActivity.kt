@@ -1,4 +1,4 @@
-package com.sunadriann.where_im_at
+package com.sunadriann.whereimat
 
 import io.flutter.embedding.android.FlutterActivity
 

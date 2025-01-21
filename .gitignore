@@ -48,6 +48,7 @@ app.*.map.json
 
 # Environment variables
 *.env
+*.txt
 
 # Flutter-specific environment variables
 firebase.json
