@@ -9,7 +9,7 @@ A Flutter app to share your current location with trusted contacts. Just tap, an
 - 🔐 User authentication
 
 ## Prerequisites 🛠️
-- Flutter v3.27.1+
+- Flutter v3.27+
 
 ## Getting Started 🚀
 

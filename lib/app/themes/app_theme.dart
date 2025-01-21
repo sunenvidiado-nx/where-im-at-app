@@ -25,6 +25,7 @@ abstract class AppTheme {
       secondary: AppColors.red,
       surface: AppColors.white,
       shadow: AppColors.black.withAlpha(40),
+      onPrimaryFixedVariant: AppColors.textBoxColor,
     );
   }
 
@@ -79,13 +80,13 @@ abstract class AppTheme {
   InputDecorationTheme get _inputDecorationTheme {
     return InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.textBoxColor,
+      fillColor: _colorScheme.onPrimaryFixedVariant,
       hintStyle: TextStyle(
-        color: Colors.grey[600],
+        color: _colorScheme.primary.withAlpha(100),
         fontSize: 16,
       ),
       labelStyle: TextStyle(
-        color: Colors.grey[800],
+        color: _colorScheme.primary.withAlpha(200),
         fontWeight: FontWeight.bold,
       ),
       border: OutlineInputBorder(
@@ -94,8 +95,8 @@ abstract class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(UiConstants.borderRadius),
-        borderSide: const BorderSide(
-          color: AppColors.red,
+        borderSide: BorderSide(
+          color: _colorScheme.secondary,
           width: 2,
         ),
       ),
@@ -110,8 +111,8 @@ abstract class AppTheme {
   ElevatedButtonThemeData get _elevatedButtonTheme {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.red,
-        foregroundColor: Colors.white,
+        backgroundColor: _colorScheme.primary,
+        foregroundColor: _colorScheme.surface,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(UiConstants.borderRadius),

@@ -1,22 +1,26 @@
-import 'dart:io';
-import 'dart:math';
-
 import 'package:adaptive_dialog/adaptive_dialog.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_cached_tile_provider/flutter_map_cached_tile_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
-import 'package:latlng/latlng.dart';
-import 'package:map/map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:where_im_at/app/themes/app_assets.dart';
 import 'package:where_im_at/config/dependency_injection/di_keys.dart';
 import 'package:where_im_at/config/environment/env.dart';
+import 'package:where_im_at/domain/models/user_location.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
 class InteractiveMap extends StatefulWidget {
-  const InteractiveMap({this.initialLocation, super.key});
+  const InteractiveMap({
+    required this.userLocations,
+    this.initialLocation,
+    super.key,
+  });
 
+  final List<UserLocation> userLocations;
   final LatLng? initialLocation;
 
   @override
@@ -24,91 +28,83 @@ class InteractiveMap extends StatefulWidget {
 }
 
 class _InteractiveMapState extends State<InteractiveMap> {
-  late final _mapController = MapController(
-    zoom: 6,
-    location: widget.initialLocation ??
-        LatLng.degree(12.8797, 121.7740), // Philippines
-  );
-
+  late final _mapController = MapController();
+  late final _stadiaMapsApiKey = GetIt.I<Env>().stadiaMapsApiKey;
   late final _mapCacheManager =
       GetIt.I<CacheManager>(instanceName: DiKeys.mapCacheManager);
 
-  MapTransformer? _mapTransformer;
-  Offset? _dragStart;
-  double _scaleStart = 1.0;
-
-  // Zooming in android is too fast, so we need to slow it down
-  final _zoomFactor = Platform.isAndroid ? 0.02 : 0.04;
-
-  void _onScaleStart(ScaleStartDetails details) {
-    setState(() {
-      _dragStart = details.focalPoint;
-      _scaleStart = 1.0;
-    });
-  }
-
-  void _onScaleUpdate(ScaleUpdateDetails details) {
-    final scaleDiff = details.scale - _scaleStart;
-
-    if (scaleDiff > 0) {
-      _mapController.zoom += _zoomFactor;
-    } else if (scaleDiff < 0) {
-      _mapController.zoom -= _zoomFactor;
-    } else {
-      final now = details.focalPoint;
-      final diff = now - _dragStart!;
-      _mapTransformer?.drag(diff.dx, diff.dy);
-    }
-
-    setState(() {
-      _scaleStart = details.scale;
-      _dragStart = details.focalPoint;
-    });
-  }
-
-  void _zoomListener(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
-      final delta = event.scrollDelta.dy / -1000.0;
-      final zoom = _mapController.zoom + delta.clamp(2, 18);
-      _mapTransformer?.setZoomInPlace(zoom, event.localPosition);
+  @override
+  void didUpdateWidget(InteractiveMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialLocation != null &&
+        widget.initialLocation != oldWidget.initialLocation) {
+      _mapController.move(widget.initialLocation!, 12.0);
     }
   }
 
-  String _stadiaMapUrl(num z, int x, int y) {
-    const mapTheme =
-        'alidade_smooth'; // TODO Add dark theme (alidade_smooth_dark)
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final apiKey = GetIt.I<Env>().stadiaMapsApiKey;
-    return 'https://tiles.stadiamaps.com/tiles/$mapTheme/$z/$x/$y${devicePixelRatio >= 2 ? '@2x' : ''}.png?api_key=$apiKey';
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _mapCacheManager.dispose();
+    super.dispose();
   }
 
-  (int x, int y, num z) _normalizeTileCoordinates(int x, int y, int z) {
-    final tilesInZoom = pow(2.0, z).floor();
-
-    while (x < 0) {
-      x += tilesInZoom;
-    }
-    while (y < 0) {
-      y += tilesInZoom;
-    }
-
-    while (x >= tilesInZoom) {
-      x -= tilesInZoom;
-    }
-    while (y >= tilesInZoom) {
-      y -= tilesInZoom;
-    }
-
-    return (x, y, z);
+  @override
+  Widget build(BuildContext context) {
+    return FlutterMap(
+      mapController: _mapController,
+      options: const MapOptions(
+        interactionOptions: InteractionOptions(
+          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+        ),
+        initialCenter: LatLng(12.8797, 121.7740), // Philippines
+        initialZoom: 6,
+      ),
+      children: [
+        _buildMapLayer(),
+        _buildUserLocationMarkers(),
+        _buildAttributionButton(),
+      ],
+    );
   }
 
-  Widget _buildMapTile(String url) {
-    return CachedNetworkImage(
-      imageUrl: url,
-      cacheManager: _mapCacheManager,
-      fit: BoxFit.cover,
-      errorWidget: (context, url, error) =>
-          const ColoredBox(color: Colors.grey),
+  Widget _buildMapLayer() {
+    return TileLayer(
+      // TODO Handle dark theme (alidade_smooth_dark)
+      urlTemplate:
+          'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key={api_key}',
+      tileProvider: CachedTileProvider(cacheManager: _mapCacheManager),
+      additionalOptions: {'api_key': _stadiaMapsApiKey},
+      retinaMode: RetinaMode.isHighDensity(context),
+    );
+  }
+
+  Widget _buildUserLocationMarkers() {
+    return MarkerLayer(
+      markers: widget.userLocations
+          .map(
+            (location) => Marker(
+              point: location.latLong,
+              child: SvgPicture.asset(AppAssets.mainLogo, height: 42),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildAttributionButton() {
+    return Positioned(
+      left: 0,
+      top: 0,
+      child: SafeArea(
+        child: IconButton(
+          icon: Icon(
+            Icons.location_on_outlined,
+            color: context.colorScheme.primary.withAlpha(120),
+          ),
+          onPressed: _showAttributionBottomSheet,
+        ),
+      ),
     );
   }
 
@@ -144,70 +140,5 @@ class _InteractiveMapState extends State<InteractiveMap> {
         mode: LaunchMode.externalApplication,
       );
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(seconds: 3));
-      _mapTransformer?.setZoomInPlace(_mapController.zoom + 3, Offset.zero);
-    });
-  }
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    _mapCacheManager.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MapLayout(
-      controller: _mapController,
-      builder: (context, transformer) {
-        _mapTransformer ??= transformer;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onScaleStart: _onScaleStart,
-          onScaleUpdate: _onScaleUpdate,
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerSignal: _zoomListener,
-            child: Stack(
-              children: [
-                TileLayer(
-                  builder: (context, x, y, z) {
-                    final (nX, nY, nZ) = _normalizeTileCoordinates(x, y, z);
-                    return _buildMapTile(_stadiaMapUrl(nZ, nX, nY));
-                  },
-                ),
-                Positioned(
-                  left: 2,
-                  child: SafeArea(
-                    child: Transform.scale(
-                      scale: 0.8,
-                      child: IconButton(
-                        visualDensity: VisualDensity.compact,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withAlpha(140),
-                          padding: EdgeInsets.zero,
-                        ),
-                        icon: const Icon(
-                          Icons.info_outline,
-                          color: Colors.black87,
-                        ),
-                        onPressed: _showAttributionBottomSheet,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 }

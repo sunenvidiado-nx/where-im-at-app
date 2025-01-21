@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:very_simple_state_manager/very_simple_state_manager.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
@@ -18,11 +20,16 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
     this._authService,
     this._locationService,
     this._userLocationRepository,
+    this._secureStorage,
   ) : super(const HomeScreenState());
 
   final AuthService _authService;
   final LocationService _locationService;
   final UserLocationRepository _userLocationRepository;
+  final FlutterSecureStorage _secureStorage;
+
+  // Generate keys here: http://bit.ly/random-strings-generator
+  static const _isBroadcastingLocationKey = '3VWwaaP7gw05';
 
   late Stream<Position> _currentLocationStream;
   late Stream<List<UserLocation>> _userLocationsStream;
@@ -39,28 +46,20 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
 
   Future<void> initialize() async {
     try {
-      _userLocationsStream = _userLocationRepository.streamUserLocations();
-      _userLocationsSubscription = _userLocationsStream.listen(
-        (userLocations) {
-          final updatedLocations = [...state.userLocations, ...userLocations]
-              .fold<Map<String, UserLocation>>({}, (locationsMap, location) {
-                // Keep only the most recent location for each user
-                // and only if the user is broadcasting their location
-                if (!locationsMap.containsKey(location.id) ||
-                    (locationsMap[location.id]!
-                        .updatedAt
-                        .isBefore(location.updatedAt))) {
-                  locationsMap[location.id!] = location;
-                }
-                return locationsMap;
-              })
-              .values
-              .where((location) => location.isBroadcasting)
-              .toList();
+      final currentLocation = await _locationService
+          .getCurrentLocation()
+          .then((position) => LatLng(position.latitude, position.longitude));
 
-          state = state.copyWith(userLocations: updatedLocations);
-        },
-      );
+      state = state.copyWith(initialLocation: currentLocation);
+
+      final isBroadcastingLocation =
+          await _secureStorage.read(key: _isBroadcastingLocationKey);
+
+      if (isBroadcastingLocation == 'true') await broadcastCurrentLocation();
+
+      _userLocationsStream = _userLocationRepository.streamUserLocations();
+      _userLocationsSubscription = _userLocationsStream
+          .listen((data) => state = state.copyWith(userLocations: data));
     } on Exception catch (e) {
       state = state.copyWith(exception: e);
     }
@@ -70,6 +69,7 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
     _currentLocationStream = _locationService.streamCurrentLocation();
     _locationSubscription = _currentLocationStream.listen(_updateUserLocation);
     state = state.copyWith(isBroadcastingLocation: true);
+    await _secureStorage.write(key: _isBroadcastingLocationKey, value: 'true');
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
@@ -86,6 +86,7 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
           updatedAt: DateTime.now(),
         ),
       ),
+      _secureStorage.delete(key: _isBroadcastingLocationKey),
     ]);
   }
 

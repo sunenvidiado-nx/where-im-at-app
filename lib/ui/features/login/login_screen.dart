@@ -141,12 +141,15 @@ class _LoginScreenState extends ManagedState<LoginScreenStateManager,
           child: ElevatedButton(
             onPressed: state.loading
                 ? null
-                : () {
+                : () async {
                     if (_formKey.currentState!.validate()) {
-                      stateManager.login(
+                      await stateManager.login(
                         _emailController.text,
                         _passwordController.text,
                       );
+
+                      // ignore: use_build_context_synchronously
+                      context.goNamed(Routes.root);
                     }
                   },
             child: Text(context.l10n.signInButton),

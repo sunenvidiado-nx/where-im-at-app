@@ -40,7 +40,10 @@ class _HomeScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const InteractiveMap(),
+      body: InteractiveMap(
+        initialLocation: state.initialLocation,
+        userLocations: state.userLocations,
+      ),
       floatingActionButton: _buildFab(context),
     );
   }
@@ -49,8 +52,8 @@ class _HomeScreenState
     return FloatingActionButton(
       child: Icon(
         state.isBroadcastingLocation
-            ? Icons.location_disabled_outlined
-            : Icons.my_location_outlined,
+            ? Icons.my_location_outlined
+            : Icons.location_disabled_outlined,
       ),
       onPressed: () {
         if (state.isBroadcastingLocation) {

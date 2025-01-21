@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:latlng/latlng.dart';
+import 'package:latlong2/latlong.dart';
 
 part 'user_location.mapper.dart';
 
@@ -34,7 +34,7 @@ class UserLocation with UserLocationMappable {
   /// For convenience, this should be set to the coresponding user's ID.
   final String? id;
 
-  LatLng get latLng => LatLng.degree(latitude.toDouble(), longitude.toDouble());
+  LatLng get latLong => LatLng(latitude.toDouble(), longitude.toDouble());
 
   /// Converts this [UserLocation] to a map suitable for Firestore storage.
   ///

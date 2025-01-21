@@ -16,12 +16,7 @@ class UserLocationRepository {
         .collection(_collectionPath)
         .where('is_broadcasting', isEqualTo: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => UserLocation.fromFirestore(doc))
-              .toList(),
-        )
-        .where((locations) => locations.isNotEmpty);
+        .map((s) => s.docs.map(UserLocation.fromFirestore).toList());
   }
 
   /// Creates or updates a user's location in Firestore.
