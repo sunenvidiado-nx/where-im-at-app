@@ -16,6 +16,7 @@ abstract class AppTheme {
       primaryTextTheme: _primaryTextTheme,
       inputDecorationTheme: _inputDecorationTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
+      floatingActionButtonTheme: _floatingActionButtonTheme,
     );
   }
 
@@ -122,6 +123,13 @@ abstract class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  FloatingActionButtonThemeData get _floatingActionButtonTheme {
+    return FloatingActionButtonThemeData(
+      backgroundColor: _colorScheme.surface,
+      foregroundColor: _colorScheme.primary,
     );
   }
 }

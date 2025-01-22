@@ -57,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return FloatingActionButton(
           child: Icon(
             isBroadcastingLocation
-                ? Icons.my_location_outlined
-                : Icons.location_disabled_outlined,
+                ? Icons.location_disabled_outlined
+                : Icons.my_location_outlined,
           ),
           onPressed: () {
             if (isBroadcastingLocation) {
