@@ -22,5 +22,20 @@
   "passwordRequiredError": "Please enter your password",
   "signInButton": "Sign In",
   "noAccountText": "Don't have an account? ",
-  "registerNowText": "Create an account."
+  "registerNowText": "Create an account.",
+  "registerNotAcceptingUsersTitle": "We don't accept new users at the moment.",
+  "registerNotAcceptingUsersSubtitle": "But stay tuned for future updates!",
+  "registerBackToSignIn": "Back to Sign in",
+  "setUpProfileTitle": "Set up your profile",
+  "setUpProfileAddPicture": "Add a profile picture",
+  "setUpProfileUseCameraAction": "Use camera",
+  "setUpProfileChooseFromGalleryAction": "Choose from gallery",
+  "setUpProfileCancelAction": "Cancel",
+  "setUpProfileUsernameLabel": "Username",
+  "setUpProfileUsernameHint": "Your username",
+  "setUpProfileUsernameRequiredError": "Username is required",
+  "setUpProfileUsernameContainsSpaceError": "Username cannot contain spaces",
+  "setUpProfileUsernameTooShortError": "Username must be at least 3 characters long",
+  "setUpProfileUsernameTooLongError": "Username cannot be longer than 16 characters",
+  "setUpProfileSetupButton": "Set up profile"
 }

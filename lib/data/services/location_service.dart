@@ -1,6 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
-import 'package:where_im_at/l10n/app_localization.dart';
+import 'package:where_im_at/l10n/l10n.dart';
 
 @singleton
 class LocationService {

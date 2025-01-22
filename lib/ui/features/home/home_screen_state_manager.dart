@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:very_simple_state_manager/very_simple_state_manager.dart';
+import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/location_service.dart';
@@ -20,12 +21,14 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
     this._authService,
     this._locationService,
     this._userLocationRepository,
+    this._userInfoRepository,
     this._secureStorage,
   ) : super(const HomeScreenState());
 
   final AuthService _authService;
   final LocationService _locationService;
   final UserLocationRepository _userLocationRepository;
+  final UserInfoRepository _userInfoRepository;
   final FlutterSecureStorage _secureStorage;
 
   // Generate keys here: http://bit.ly/random-strings-generator
@@ -46,6 +49,13 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
 
   Future<void> initialize() async {
     try {
+      final userInfo = await _userInfoRepository.getUserInfo(_userId);
+
+      if (userInfo == null) {
+        state = state.copyWith(shouldSetUpProfile: true);
+        return;
+      }
+
       final currentLocation = await _locationService
           .getCurrentLocation()
           .then((position) => LatLng(position.latitude, position.longitude));
@@ -62,6 +72,8 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
           .listen((data) => state = state.copyWith(userLocations: data));
     } on Exception catch (e) {
       state = state.copyWith(exception: e);
+    } finally {
+      state = state.copyWith(exception: null);
     }
   }
 

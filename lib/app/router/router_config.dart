@@ -6,6 +6,7 @@ import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/ui/features/home/home_screen.dart';
 import 'package:where_im_at/ui/features/login/login_screen.dart';
 import 'package:where_im_at/ui/features/register/register_screen.dart';
+import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen.dart';
 
 @module
 abstract class RouterConfig {
@@ -33,10 +34,15 @@ abstract class RouterConfig {
           name: Routes.register,
           builder: (context, state) => const RegisterScreen(),
         ),
+        GoRoute(
+          path: Routes.setUpProfile,
+          name: Routes.setUpProfile,
+          builder: (context, state) => const SetUpProfileScreen(),
+        ),
       ],
-      redirect: (context, state) {
-        final isLoggedIn = GetIt.I<AuthService>().isLoggedIn;
+      redirect: (context, state) async {
         final location = state.uri.toString();
+        final isLoggedIn = GetIt.I<AuthService>().isLoggedIn;
 
         // If the user is logged in, redirect to the home screen
         if (location == Routes.root && isLoggedIn ||

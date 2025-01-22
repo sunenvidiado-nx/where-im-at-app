@@ -49,5 +49,9 @@
 		<string>We&apos;ll share your location only to your trusted contacts.</string>
 		<key>UIStatusBarHidden</key>
 		<false />
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We need access to your photos to set up your user photo.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>We need access to your camera to set up your user photo.</string>
 	</dict>
 </plist>

@@ -6,7 +6,7 @@ import 'package:flutter_map_cached_tile_provider/flutter_map_cached_tile_provide
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:where_im_at/app/themes/app_assets.dart';
 import 'package:where_im_at/config/dependency_injection/di_keys.dart';
 import 'package:where_im_at/config/environment/env.dart';
@@ -130,13 +130,15 @@ class _InteractiveMapState extends State<InteractiveMap> {
     );
 
     if (result != null) {
-      launchUrlString(
-        switch (result) {
-          'stadia' => 'https://stadiamaps.com/',
-          'osm' => 'https://www.openstreetmap.org/copyright',
-          'omt' => 'https://openmaptiles.org/',
-          _ => throw ArgumentError('Unknown url: $result'),
-        },
+      launchUrl(
+        Uri.parse(
+          switch (result) {
+            'stadia' => 'https://stadiamaps.com/',
+            'osm' => 'https://www.openstreetmap.org/copyright',
+            'omt' => 'https://openmaptiles.org/',
+            _ => throw ArgumentError('Unknown url: $result'),
+          },
+        ),
         mode: LaunchMode.externalApplication,
       );
     }

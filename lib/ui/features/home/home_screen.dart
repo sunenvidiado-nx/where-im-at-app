@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:very_simple_state_manager/very_simple_state_manager.dart';
+import 'package:where_im_at/app/router/routes.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/features/home/home_screen_state_manager.dart';
 import 'package:where_im_at/ui/features/home/widgets/interactive_map.dart';
@@ -25,12 +27,16 @@ class _HomeScreenState
     super.initState();
     stateManager
       ..addListener(
-        (newState) {
-          if (newState.exception != null) {
+        (state) {
+          if (state.exception != null) {
             context.showSnackbar(
-              (newState.exception as Exception).errorMessage,
+              (state.exception as Exception).errorMessage,
               type: AppSnackbarType.error,
             );
+          }
+
+          if (state.shouldSetUpProfile) {
+            context.go(Routes.setUpProfile);
           }
         },
       )
