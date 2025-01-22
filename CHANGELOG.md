@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.3] - 2025-01-22
+
+### Added
+
+- Added informative screen when user denies location access
+
+### Changed
+
+- Updated button designs
+
+### Fixed
+
+- Fixed incorrect data being displayed on user markers pt. 2 😅
+
 ## [1.0.2] - 2025-01-22
 
 ### Fixed
