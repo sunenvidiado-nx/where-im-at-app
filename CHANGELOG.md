@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2] - 2025-01-22
+
+### Fixed
+
+- Fixed incorrect data being displayed on user markers
+
+### Changed
+
+- Updated floating action button design
+
 ## [1.0.1] - 2025-01-22
 
 ### Changed
