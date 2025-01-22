@@ -24,7 +24,7 @@ git clone https://github.com/sunenvidiado-nx/where-im-at-app.git
 flutter pub get
 ```
 
-3. Create .env file
+3. Create `.env` file
 ```bash
 cp .env.example .env
 ```
