@@ -1,5 +1,7 @@
 import 'dart:async';
 
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,8 +15,8 @@ import 'package:where_im_at/data/services/location_service.dart';
 import 'package:where_im_at/domain/models/user_info_and_location.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
 
-part 'home_screen_state.dart';
 part 'home_screen_cubit.mapper.dart';
+part 'home_screen_state.dart';
 
 @injectable
 class HomeScreenCubit extends Cubit<HomeScreenState> {
@@ -71,8 +73,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       if (isBroadcastingLocation == 'true') await broadcastCurrentLocation();
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
-      _userLocationsSubscription = _userLocationsStream
-          .listen((data) => emit(state.copyWith(userLocations: data)));
+      _userLocationsSubscription = _userLocationsStream.listen((data) {
+        // Clear the cache when receiving new location updates
+        _userInfoAndLocationCache.clear();
+        emit(state.copyWith(userLocations: data));
+      });
     } on Exception catch (e) {
       emit(state.copyWith(exception: e));
     } finally {
@@ -107,12 +112,22 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
   Future<UserInfoAndLocation> getUserInfoAndLocation(String userId) async {
     try {
+      // Check if we have a valid cached entry
       if (_userInfoAndLocationCache.containsKey(userId)) {
-        return _userInfoAndLocationCache[userId]!;
+        final cached = _userInfoAndLocationCache[userId]!;
+
+        // Check if the cached location matches the current state
+        final currentLocation =
+            state.userLocations.firstWhereOrNull((loc) => loc.id == userId);
+
+        if (currentLocation == cached.location) {
+          return cached;
+        }
       }
 
       final userInfo = await _userInfoRepository.getUserInfo(userId);
-      final userLocation = await _userLocationRepository.getByUserId(userId);
+      final userLocation =
+          state.userLocations.firstWhereOrNull((loc) => loc.id == userId);
 
       if (userInfo == null || userLocation == null) {
         throw Exception(
