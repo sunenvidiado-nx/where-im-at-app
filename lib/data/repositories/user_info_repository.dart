@@ -7,16 +7,29 @@ import 'package:where_im_at/domain/models/user_info.dart';
 
 @injectable
 class UserInfoRepository {
-  const UserInfoRepository(this._firestore, this._storage);
+  UserInfoRepository(this._firestore, this._storage);
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
 
   static const _collectionPath = 'user_info';
 
-  Future<UserInfo?> getUserInfo(String userId) async {
-    final doc = await _firestore.collection(_collectionPath).doc(userId).get();
-    return doc.exists ? UserInfo.fromFirestore(doc) : null;
+  final _cache = <String, UserInfo>{};
+
+  Future<UserInfo?> getUserInfo(String userId, {bool useCache = true}) async {
+    if (useCache && _cache.containsKey(userId)) {
+      return _cache[userId];
+    }
+
+    final userInfo = await _firestore
+        .collection(_collectionPath)
+        .doc(userId)
+        .get()
+        .then((doc) => doc.exists ? UserInfo.fromFirestore(doc) : null);
+
+    if (userInfo != null) _cache[userId] = userInfo;
+
+    return userInfo;
   }
 
   Future<void> createOrUpdate(UserInfo userInfo) async {
