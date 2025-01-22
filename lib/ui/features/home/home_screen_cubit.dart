@@ -12,7 +12,7 @@ import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/location_service.dart';
-import 'package:where_im_at/domain/models/user_info_and_location.dart';
+import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
 
 part 'home_screen_cubit.mapper.dart';
@@ -50,8 +50,6 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// other data related to the current user.
   String get _userId => _authService.currentUser!.uid;
 
-  final Map<String, UserInfoAndLocation> _userInfoAndLocationCache = {};
-
   Future<void> initialize() async {
     try {
       final userInfo = await _userInfoRepository.getUserInfo(_userId);
@@ -74,9 +72,9 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
       _userLocationsSubscription = _userLocationsStream.listen((data) {
-        // Clear the cache when receiving new location updates
-        _userInfoAndLocationCache.clear();
-        emit(state.copyWith(userLocations: data));
+        if (!const DeepCollectionEquality().equals(state.userLocations, data)) {
+          emit(state.copyWith(userLocations: data));
+        }
       });
     } on Exception catch (e) {
       emit(state.copyWith(exception: e));
@@ -86,15 +84,26 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }
 
   Future<void> broadcastCurrentLocation() async {
-    _currentLocationStream = _locationService.streamCurrentLocation();
-    _locationSubscription = _currentLocationStream.listen(_updateUserLocation);
-    emit(state.copyWith(isBroadcastingLocation: true));
-    await _secureStorage.write(key: _isBroadcastingLocationKey, value: 'true');
+    try {
+      _currentLocationStream = _locationService.streamCurrentLocation();
+      _locationSubscription =
+          _currentLocationStream.listen(_updateUserLocation);
+      emit(state.copyWith(isBroadcastingLocation: true));
+      await _secureStorage.write(
+        key: _isBroadcastingLocationKey,
+        value: 'true',
+      );
+    } catch (e) {
+      await stopCurrentLocationBroadcast();
+      rethrow;
+    }
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
     emit(state.copyWith(isBroadcastingLocation: false));
+
     final lastPosition = await _locationService.getCurrentLocation();
+
     await Future.wait([
       _locationSubscription?.cancel() ?? Future.value(),
       _userLocationRepository.createOrUpdate(
@@ -110,39 +119,18 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     ]);
   }
 
-  Future<UserInfoAndLocation> getUserInfoAndLocation(String userId) async {
+  Future<UserInfo> getUserInfo(String userId) async {
     try {
-      // Check if we have a valid cached entry
-      if (_userInfoAndLocationCache.containsKey(userId)) {
-        final cached = _userInfoAndLocationCache[userId]!;
-
-        // Check if the cached location matches the current state
-        final currentLocation =
-            state.userLocations.firstWhereOrNull((loc) => loc.id == userId);
-
-        if (currentLocation == cached.location) {
-          return cached;
-        }
-      }
-
       final userInfo = await _userInfoRepository.getUserInfo(userId);
-      final userLocation =
-          state.userLocations.firstWhereOrNull((loc) => loc.id == userId);
 
-      if (userInfo == null || userLocation == null) {
-        throw Exception(
-          'Could not retrieve user info or location for user $userId',
-        );
+      if (userInfo == null) {
+        throw Exception('Could not retrieve user info for user $userId');
       }
 
-      final userInfoAndLocation =
-          UserInfoAndLocation(info: userInfo, location: userLocation);
-      _userInfoAndLocationCache[userId] = userInfoAndLocation;
-
-      return userInfoAndLocation;
+      return userInfo;
     } catch (e) {
       emit(state.copyWith(exception: e));
-      rethrow; // Let this fail
+      rethrow; // TODO Handle this better
     }
   }
 

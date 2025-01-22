@@ -82,16 +82,16 @@ class _InteractiveMapState extends State<InteractiveMap> {
 
   Widget _buildUserLocationMarkers() {
     return MarkerLayer(
-      markers: widget._userLocations
-          .map(
-            (userLocation) => Marker(
-              point: userLocation.latLong,
-              width: 200,
-              height: 50,
-              child: UserMarker(userId: userLocation.id!),
-            ),
-          )
-          .toList(),
+      markers: List.generate(
+        widget._userLocations.length,
+        (index) => Marker(
+          key: Key(widget._userLocations[index].id!),
+          point: widget._userLocations[index].latLong,
+          width: 200,
+          height: 50,
+          child: UserMarker(userId: widget._userLocations[index].id!),
+        ),
+      ),
     );
   }
 
