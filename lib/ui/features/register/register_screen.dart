@@ -19,7 +19,7 @@ class RegisterScreen extends StatelessWidget {
                 const SizedBox(height: 72),
                 Text(
                   context.l10n.registerNotAcceptingUsersTitle,
-                  style: context.primaryTextTheme.displaySmall,
+                  style: context.primaryTextTheme.headlineMedium,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -34,8 +34,8 @@ class RegisterScreen extends StatelessWidget {
             hasScrollBody: false,
             child: Center(
               child: Text(
-                '┐(￣∀￣)┌', // TODO Move to l10n? idk what to do here
-                style: context.textTheme.displayMedium?.copyWith(
+                '_(:3 」∠)_', // TODO Move to l10n? idk what to do here
+                style: context.textTheme.displaySmall?.copyWith(
                   color: context.colorScheme.shadow.withAlpha(40),
                 ),
               ),
@@ -48,7 +48,18 @@ class RegisterScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: ElevatedButton(
             onPressed: context.pop,
-            child: Text(context.l10n.registerBackToSignIn),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.arrow_back,
+                  size: 22,
+                  color: context.colorScheme.surface,
+                ),
+                const SizedBox(width: 6),
+                Text(context.l10n.registerBackToSignIn),
+              ],
+            ),
           ),
         ),
       ),

@@ -4,4 +4,5 @@ abstract class Routes {
   static const login = '/login';
   static const register = '/register';
   static const setUpProfile = '/set-up-profile';
+  static const noLocationServices = '/no-location-services';
 }

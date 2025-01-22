@@ -37,5 +37,9 @@
   "setUpProfileUsernameContainsSpaceError": "Username cannot contain spaces",
   "setUpProfileUsernameTooShortError": "Username must be at least 3 characters long",
   "setUpProfileUsernameTooLongError": "Username cannot be longer than 16 characters",
-  "setUpProfileSetupButton": "Set up profile"
+  "setUpProfileSetupButton": "Set up profile",
+  "locationServicesDisabledTitle": "Location Services Disabled",
+  "locationServicesDisabledMessage": "This app needs location access to work properly. Please check your ",
+  "locationServicesDisabledSettings": "device settings",
+  "locationServicesDisabledAndEnable": " and enable the location services."
 }

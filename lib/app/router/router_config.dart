@@ -8,6 +8,7 @@ import 'package:where_im_at/ui/features/home/home_screen.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/ui/features/login/login_screen.dart';
 import 'package:where_im_at/ui/features/login/login_screen_cubit.dart';
+import 'package:where_im_at/ui/features/no_location_services/no_location_services_screen.dart';
 import 'package:where_im_at/ui/features/register/register_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen_cubit.dart';
@@ -22,6 +23,11 @@ abstract class RouterConfig {
           path: Routes.root,
           name: Routes.root,
           redirect: (context, state) => Routes.home,
+        ),
+        GoRoute(
+          path: Routes.noLocationServices,
+          name: Routes.noLocationServices,
+          builder: (context, state) => const NoLocationServicesScreen(),
         ),
         GoRoute(
           path: Routes.register,

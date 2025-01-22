@@ -57,10 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _listener(BuildContext context, LoginScreenState state) {
     if (state.errorMessage != null) {
-      context.showSnackbar(
-        state.errorMessage!,
-        type: AppSnackbarType.error,
-      );
+      context.showSnackbar(state.errorMessage!, type: AppSnackbarType.error);
     }
   }
 
@@ -73,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 24),
         Text(
           context.l10n.loginTitle,
-          style: context.primaryTextTheme.displaySmall?.copyWith(fontSize: 30),
+          style: context.primaryTextTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
         Text(
@@ -148,7 +145,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (_cubit.state.didLogIn) context.go(Routes.home);
                         }
                       },
-                child: Text(context.l10n.signInButton),
+                // child: Text(context.l10n.signInButton),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(context.l10n.signInButton),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 22,
+                      color: context.colorScheme.surface,
+                    ),
+                  ],
+                ),
               );
             },
           ),
