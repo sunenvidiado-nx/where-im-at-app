@@ -1,4 +1,4 @@
-part of 'home_screen_state_manager.dart';
+part of 'home_screen_cubit.dart';
 
 @MappableClass()
 class HomeScreenState with HomeScreenStateMappable {

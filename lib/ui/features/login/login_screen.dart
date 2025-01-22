@@ -1,46 +1,27 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:very_simple_state_manager/very_simple_state_manager.dart';
 import 'package:where_im_at/app/router/routes.dart';
 import 'package:where_im_at/app/themes/app_assets.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/common_widgets/textfields/app_text_form_field.dart';
-import 'package:where_im_at/ui/features/login/login_screen_state_manager.dart';
+import 'package:where_im_at/ui/features/login/login_screen_cubit.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
-class LoginScreen
-    extends ManagedStatefulWidget<LoginScreenStateManager, LoginScreenState> {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
-  @override
-  LoginScreenStateManager createStateManager() => GetIt.I();
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ManagedState<LoginScreenStateManager,
-    LoginScreenState, LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   late final _emailController = TextEditingController();
   late final _passwordController = TextEditingController();
-
+  late final _cubit = context.read<LoginScreenCubit>();
   final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    stateManager.addListener((newState) {
-      if (newState.errorMessage != null) {
-        context.showSnackbar(
-          newState.errorMessage!,
-          type: AppSnackbarType.error,
-        );
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -51,24 +32,36 @@ class _LoginScreenState extends ManagedState<LoginScreenStateManager,
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 32),
-              _buildForm(),
-            ],
+    return BlocConsumer<LoginScreenCubit, LoginScreenState>(
+      listener: _listener,
+      builder: (context, state) => Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 32),
+                _buildForm(),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: _buildBottomNavigationBar(),
+        bottomNavigationBar: SafeArea(
+          child: _buildBottomNavigationBar(),
+        ),
       ),
     );
+  }
+
+  void _listener(BuildContext context, LoginScreenState state) {
+    if (state.errorMessage != null) {
+      context.showSnackbar(
+        state.errorMessage!,
+        type: AppSnackbarType.error,
+      );
+    }
   }
 
   Widget _buildHeader() {
@@ -138,21 +131,26 @@ class _LoginScreenState extends ManagedState<LoginScreenStateManager,
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ElevatedButton(
-            onPressed: state.loading
-                ? null
-                : () async {
-                    if (_formKey.currentState!.validate()) {
-                      await stateManager.login(
-                        _emailController.text,
-                        _passwordController.text,
-                      );
+          child: BlocSelector<LoginScreenCubit, LoginScreenState, bool>(
+            selector: (state) => state.loading,
+            builder: (context, loading) {
+              return ElevatedButton(
+                onPressed: loading
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          await _cubit.login(
+                            _emailController.text,
+                            _passwordController.text,
+                          );
 
-                      // ignore: use_build_context_synchronously
-                      if (state.didLogIn) context.go(Routes.home);
-                    }
-                  },
-            child: Text(context.l10n.signInButton),
+                          // ignore: use_build_context_synchronously
+                          if (_cubit.state.didLogIn) context.go(Routes.home);
+                        }
+                      },
+                child: Text(context.l10n.signInButton),
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),

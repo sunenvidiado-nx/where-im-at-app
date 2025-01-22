@@ -1,23 +1,24 @@
 import 'dart:async';
 
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:very_simple_state_manager/very_simple_state_manager.dart';
 import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/location_service.dart';
+import 'package:where_im_at/domain/models/user_info_and_location.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
 
 part 'home_screen_state.dart';
-part 'home_screen_state_manager.mapper.dart';
+part 'home_screen_cubit.mapper.dart';
 
 @injectable
-class HomeScreenStateManager extends StateManager<HomeScreenState> {
-  HomeScreenStateManager(
+class HomeScreenCubit extends Cubit<HomeScreenState> {
+  HomeScreenCubit(
     this._authService,
     this._locationService,
     this._userLocationRepository,
@@ -47,12 +48,14 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
   /// other data related to the current user.
   String get _userId => _authService.currentUser!.uid;
 
+  final Map<String, UserInfoAndLocation> _userInfoAndLocationCache = {};
+
   Future<void> initialize() async {
     try {
       final userInfo = await _userInfoRepository.getUserInfo(_userId);
 
       if (userInfo == null) {
-        state = state.copyWith(shouldSetUpProfile: true);
+        emit(state.copyWith(shouldSetUpProfile: true));
         return;
       }
 
@@ -60,7 +63,7 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
           .getCurrentLocation()
           .then((position) => LatLng(position.latitude, position.longitude));
 
-      state = state.copyWith(initialLocation: currentLocation);
+      emit(state.copyWith(initialLocation: currentLocation));
 
       final isBroadcastingLocation =
           await _secureStorage.read(key: _isBroadcastingLocationKey);
@@ -69,23 +72,23 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
       _userLocationsSubscription = _userLocationsStream
-          .listen((data) => state = state.copyWith(userLocations: data));
+          .listen((data) => emit(state.copyWith(userLocations: data)));
     } on Exception catch (e) {
-      state = state.copyWith(exception: e);
+      emit(state.copyWith(exception: e));
     } finally {
-      state = state.copyWith(exception: null);
+      emit(state.copyWith(exception: null));
     }
   }
 
   Future<void> broadcastCurrentLocation() async {
     _currentLocationStream = _locationService.streamCurrentLocation();
     _locationSubscription = _currentLocationStream.listen(_updateUserLocation);
-    state = state.copyWith(isBroadcastingLocation: true);
+    emit(state.copyWith(isBroadcastingLocation: true));
     await _secureStorage.write(key: _isBroadcastingLocationKey, value: 'true');
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
-    state = state.copyWith(isBroadcastingLocation: false);
+    emit(state.copyWith(isBroadcastingLocation: false));
     final lastPosition = await _locationService.getCurrentLocation();
     await Future.wait([
       _locationSubscription?.cancel() ?? Future.value(),
@@ -102,6 +105,24 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
     ]);
   }
 
+  Future<UserInfoAndLocation?> getUserInfoAndLocation(String userId) async {
+    if (_userInfoAndLocationCache.containsKey(userId)) {
+      return _userInfoAndLocationCache[userId];
+    }
+
+    final userInfo = await _userInfoRepository.getUserInfo(userId);
+    final userLocation = await _userLocationRepository.getByUserId(userId);
+
+    if (userInfo != null && userLocation != null) {
+      final userInfoAndLocation =
+          UserInfoAndLocation(info: userInfo, location: userLocation);
+      _userInfoAndLocationCache[userId] = userInfoAndLocation;
+      return userInfoAndLocation;
+    }
+
+    return null;
+  }
+
   Future<void> _updateUserLocation(Position position) async {
     await _userLocationRepository.createOrUpdate(
       UserLocation(
@@ -115,9 +136,9 @@ class HomeScreenStateManager extends StateManager<HomeScreenState> {
   }
 
   @override
-  void dispose() {
+  Future<void> close() async {
     _locationSubscription?.cancel();
     _userLocationsSubscription?.cancel();
-    super.dispose();
+    await super.close();
   }
 }

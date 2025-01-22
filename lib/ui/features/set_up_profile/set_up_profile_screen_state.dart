@@ -1,4 +1,4 @@
-part of 'set_up_profile_screen_state_manager.dart';
+part of 'set_up_profile_screen_cubit.dart';
 
 @MappableClass()
 class SetUpProfileScreenState with SetUpProfileScreenStateMappable {

@@ -1,4 +1,4 @@
-part of 'login_screen_state_manager.dart';
+part of 'login_screen_cubit.dart';
 
 @MappableClass()
 class LoginScreenState with LoginScreenStateMappable {

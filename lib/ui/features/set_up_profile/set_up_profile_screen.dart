@@ -1,61 +1,57 @@
+import 'dart:io';
+
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:very_simple_state_manager/very_simple_state_manager.dart';
 import 'package:where_im_at/app/router/routes.dart';
 import 'package:where_im_at/app/themes/app_assets.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/common_widgets/textfields/app_text_form_field.dart';
-import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen_state_manager.dart';
+import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen_cubit.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
-class SetUpProfileScreen extends ManagedStatefulWidget<
-    SetUpProfileScreenStateManager, SetUpProfileScreenState> {
+class SetUpProfileScreen extends StatefulWidget {
   const SetUpProfileScreen({super.key});
-
-  @override
-  SetUpProfileScreenStateManager createStateManager() =>
-      GetIt.I<SetUpProfileScreenStateManager>();
 
   @override
   State<SetUpProfileScreen> createState() => _SetUpProfileScreenState();
 }
 
-class _SetUpProfileScreenState extends ManagedState<
-    SetUpProfileScreenStateManager,
-    SetUpProfileScreenState,
-    SetUpProfileScreen> {
+class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
 
-  @override
-  void initState() { 
-    super.initState();
-    stateManager.addListener((newState) {
-      if (newState.errorMessage != null) {
-        context.showSnackbar(
-          newState.errorMessage!,
-          type: AppSnackbarType.error,
-        );
-      }
-    });
-  }
+  late final _cubit = context.read<SetUpProfileScreenCubit>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Form(
-        key: _formKey,
-        child: CustomScrollView(
-          slivers: [
-            _buildTitle(context),
-            _buildProfileContent(context),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomButton(context),
+    return BlocConsumer<SetUpProfileScreenCubit, SetUpProfileScreenState>(
+      listener: _handleSatateChange,
+      builder: (context, state) {
+        return Scaffold(
+          body: Form(
+            key: _formKey,
+            child: CustomScrollView(
+              slivers: [
+                _buildTitle(context),
+                _buildProfileContent(context),
+              ],
+            ),
+          ),
+          bottomNavigationBar: _buildBottomButton(context),
+        );
+      },
     );
+  }
+
+  void _handleSatateChange(
+    BuildContext context,
+    SetUpProfileScreenState state,
+  ) {
+    if (state.errorMessage != null) {
+      context.showSnackbar(state.errorMessage!, type: AppSnackbarType.error);
+    }
   }
 
   Widget _buildTitle(BuildContext context) {
@@ -91,39 +87,45 @@ class _SetUpProfileScreenState extends ManagedState<
   }
 
   Widget _buildProfileAvatar() {
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: 72,
-          child: ClipOval(
-            child: state.photo == null
-                ? Image.asset(AppAssets.defaultPfp)
-                : Image.file(
-                    state.photo!,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-          ),
-        ),
-        Positioned(
-          bottom: -2,
-          right: -2,
-          child: IconButton(
-            style: IconButton.styleFrom(
-              backgroundColor: context.colorScheme.surface,
-              shape: const CircleBorder(),
-              shadowColor: context.colorScheme.shadow,
-              elevation: 3,
+    return BlocSelector<SetUpProfileScreenCubit, SetUpProfileScreenState,
+        File?>(
+      selector: (state) => state.photo,
+      builder: (context, photo) {
+        return Stack(
+          children: [
+            CircleAvatar(
+              radius: 72,
+              child: ClipOval(
+                child: photo == null
+                    ? Image.asset(AppAssets.defaultPfp)
+                    : Image.file(
+                        photo,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+              ),
             ),
-            onPressed: _showImagePicker,
-            icon: Icon(
-              Icons.add_photo_alternate_outlined,
-              color: context.colorScheme.primary,
+            Positioned(
+              bottom: -2,
+              right: -2,
+              child: IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: context.colorScheme.surface,
+                  shape: const CircleBorder(),
+                  shadowColor: context.colorScheme.shadow,
+                  elevation: 3,
+                ),
+                onPressed: _showImagePicker,
+                icon: Icon(
+                  Icons.add_photo_alternate_outlined,
+                  color: context.colorScheme.primary,
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -146,7 +148,7 @@ class _SetUpProfileScreenState extends ManagedState<
       ],
     );
 
-    if (result != null) stateManager.selectPhoto(result);
+    if (result != null) _cubit.selectPhoto(result);
   }
 
   Widget _buildUsernameField() {
@@ -180,19 +182,26 @@ class _SetUpProfileScreenState extends ManagedState<
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: ElevatedButton(
-          onPressed: state.isLoading
-              ? null
-              : () async {
-                  if (_formKey.currentState!.validate()) {
-                    await stateManager.updateUserInfo(_usernameController.text);
-                    if (state.didSetUpProfile) {
-                      // ignore: use_build_context_synchronously
-                      context.go(Routes.home);
-                    }
-                  }
-                },
-          child: Text(context.l10n.setUpProfileSetupButton),
+        child: BlocSelector<SetUpProfileScreenCubit, SetUpProfileScreenState,
+            bool>(
+          selector: (state) => state.isLoading,
+          builder: (context, isLoading) {
+            return ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (_formKey.currentState!.validate()) {
+                        await _cubit.updateUserInfo(_usernameController.text);
+
+                        if (_cubit.state.didSetUpProfile) {
+                          // ignore: use_build_context_synchronously
+                          context.go(Routes.home);
+                        }
+                      }
+                    },
+              child: Text(context.l10n.setUpProfileSetupButton),
+            );
+          },
         ),
       ),
     );

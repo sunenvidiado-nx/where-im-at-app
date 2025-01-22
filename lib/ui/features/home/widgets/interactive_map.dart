@@ -15,13 +15,14 @@ import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
 class InteractiveMap extends StatefulWidget {
   const InteractiveMap({
-    required this.userLocations,
-    this.initialLocation,
+    required List<UserLocation> userLocations,
+    LatLng? initialLocation,
     super.key,
-  });
+  })  : _userLocations = userLocations,
+        _initialLocation = initialLocation;
 
-  final List<UserLocation> userLocations;
-  final LatLng? initialLocation;
+  final List<UserLocation> _userLocations;
+  final LatLng? _initialLocation;
 
   @override
   State<InteractiveMap> createState() => _InteractiveMapState();
@@ -36,9 +37,9 @@ class _InteractiveMapState extends State<InteractiveMap> {
   @override
   void didUpdateWidget(InteractiveMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initialLocation != null &&
-        widget.initialLocation != oldWidget.initialLocation) {
-      _mapController.move(widget.initialLocation!, 12.0);
+    if (widget._initialLocation != null &&
+        widget._initialLocation != oldWidget._initialLocation) {
+      _mapController.move(widget._initialLocation!, 12.0);
     }
   }
 
@@ -81,7 +82,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
 
   Widget _buildUserLocationMarkers() {
     return MarkerLayer(
-      markers: widget.userLocations
+      markers: widget._userLocations
           .map(
             (location) => Marker(
               point: location.latLong,

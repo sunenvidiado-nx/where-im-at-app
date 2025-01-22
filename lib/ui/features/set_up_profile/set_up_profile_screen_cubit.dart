@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:very_simple_state_manager/very_simple_state_manager.dart';
 import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/default_profile_picture_service.dart';
@@ -11,12 +11,11 @@ import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 part 'set_up_profile_screen_state.dart';
-part 'set_up_profile_screen_state_manager.mapper.dart';
+part 'set_up_profile_screen_cubit.mapper.dart';
 
 @injectable
-class SetUpProfileScreenStateManager
-    extends StateManager<SetUpProfileScreenState> {
-  SetUpProfileScreenStateManager(
+class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
+  SetUpProfileScreenCubit(
     this._userInfoRepository,
     this._authService,
     this._defaultProfilePictureService,
@@ -35,13 +34,13 @@ class SetUpProfileScreenStateManager
     );
 
     if (pickedFile != null) {
-      state = state.copyWith(photo: File(pickedFile.path));
+      emit(state.copyWith(photo: File(pickedFile.path)));
     }
   }
 
   Future<void> updateUserInfo(String username) async {
     try {
-      state = state.copyWith(isLoading: true);
+      emit(state.copyWith(isLoading: true));
 
       final photoUrl = state.photo == null
           ? await _defaultProfilePictureService.getUrl()
@@ -59,11 +58,11 @@ class SetUpProfileScreenStateManager
         ),
       );
 
-      state = state.copyWith(didSetUpProfile: true);
+      emit(state.copyWith(didSetUpProfile: true));
     } on Exception catch (e) {
-      state = state.copyWith(errorMessage: e.errorMessage);
+      emit(state.copyWith(errorMessage: e.errorMessage));
     } finally {
-      state = state.copyWith(isLoading: false, errorMessage: null);
+      emit(state.copyWith(isLoading: false, errorMessage: null));
     }
   }
 }
