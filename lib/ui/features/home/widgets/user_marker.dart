@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
+import 'package:where_im_at/utils/extensions/int_extensions.dart';
 
 class UserMarker extends StatefulWidget {
   const UserMarker({required this.userId, super.key});
@@ -55,29 +56,32 @@ class _UserMarkerState extends State<UserMarker> {
                     children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: context.colorScheme.surface,
+                        backgroundColor:
+                            context.colorScheme.primary.withAlpha(30),
                         child: ClipOval(
                           child: CachedNetworkImage(
+                            fadeInDuration: 150.milliseconds,
+                            fadeOutDuration: 150.milliseconds,
                             imageUrl: userInfo!.photoUrl,
                             width: 28,
                             height: 28,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Icon(
-                              Icons.person_outline_rounded,
+                              Icons.face_unlock_rounded,
                               size: 20,
                               color: context.colorScheme.primary.withAlpha(120),
                             ),
                             errorWidget: (context, _, __) => Icon(
-                              Icons.person_outline_rounded,
+                              Icons.face_unlock_rounded,
                               size: 20,
                               color: context.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 140),
+                        constraints: const BoxConstraints(maxWidth: 145),
                         child: Text(
                           userInfo!.username,
                           style: context.primaryTextTheme.titleMedium,
@@ -121,7 +125,7 @@ class _TrianglePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    path.moveTo(size.width / 2, size.height);
+    path.moveTo(size.width / 2, size.height * 1.5);
     path.lineTo(0, 0);
     path.lineTo(size.width, 0);
     path.close();
