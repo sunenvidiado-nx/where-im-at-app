@@ -6,7 +6,7 @@
   "stadiaMaps": "Stadia Maps",
   "openMapTiles": "OpenMapTiles",
   "openStreetMapContributors": "OpenStreetMap contributors",
-  "close": "Close",
+  "mapAttributionsDissmisButton": "Done",
   "incorrectEmailOrPassword": "Incorrect email or password. Please try again.",
   "genericError": "An error occurred. Please try again.",
   "longGenericError": "An unexpected error occurred. Please try again later.",

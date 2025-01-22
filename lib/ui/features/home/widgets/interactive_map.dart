@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cached_tile_provider/flutter_map_cached_tile_provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:where_im_at/app/themes/app_assets.dart';
 import 'package:where_im_at/config/dependency_injection/di_keys.dart';
 import 'package:where_im_at/config/environment/env.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
+import 'package:where_im_at/ui/features/home/widgets/user_marker.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
 class InteractiveMap extends StatefulWidget {
@@ -58,6 +57,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
         interactionOptions: InteractionOptions(
           flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
         ),
+        maxZoom: 18,
         initialCenter: LatLng(12.8797, 121.7740), // Philippines
         initialZoom: 6,
       ),
@@ -84,9 +84,11 @@ class _InteractiveMapState extends State<InteractiveMap> {
     return MarkerLayer(
       markers: widget._userLocations
           .map(
-            (location) => Marker(
-              point: location.latLong,
-              child: SvgPicture.asset(AppAssets.mainLogo, height: 42),
+            (userLocation) => Marker(
+              point: userLocation.latLong,
+              width: 200,
+              height: 50,
+              child: UserMarker(userId: userLocation.id!),
             ),
           )
           .toList(),
@@ -112,7 +114,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
   Future<void> _showAttributionBottomSheet() async {
     final result = await showModalActionSheet<String>(
       context: context,
-      cancelLabel: context.l10n.close,
+      cancelLabel: context.l10n.mapAttributionsDissmisButton,
       title: context.l10n.mapAttributions,
       actions: [
         SheetAction(

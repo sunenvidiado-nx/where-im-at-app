@@ -105,22 +105,30 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     ]);
   }
 
-  Future<UserInfoAndLocation?> getUserInfoAndLocation(String userId) async {
-    if (_userInfoAndLocationCache.containsKey(userId)) {
-      return _userInfoAndLocationCache[userId];
-    }
+  Future<UserInfoAndLocation> getUserInfoAndLocation(String userId) async {
+    try {
+      if (_userInfoAndLocationCache.containsKey(userId)) {
+        return _userInfoAndLocationCache[userId]!;
+      }
 
-    final userInfo = await _userInfoRepository.getUserInfo(userId);
-    final userLocation = await _userLocationRepository.getByUserId(userId);
+      final userInfo = await _userInfoRepository.getUserInfo(userId);
+      final userLocation = await _userLocationRepository.getByUserId(userId);
 
-    if (userInfo != null && userLocation != null) {
+      if (userInfo == null || userLocation == null) {
+        throw Exception(
+          'Could not retrieve user info or location for user $userId',
+        );
+      }
+
       final userInfoAndLocation =
           UserInfoAndLocation(info: userInfo, location: userLocation);
       _userInfoAndLocationCache[userId] = userInfoAndLocation;
-      return userInfoAndLocation;
-    }
 
-    return null;
+      return userInfoAndLocation;
+    } catch (e) {
+      emit(state.copyWith(exception: e));
+      rethrow; // Let this fail
+    }
   }
 
   Future<void> _updateUserLocation(Position position) async {

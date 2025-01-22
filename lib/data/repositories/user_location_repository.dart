@@ -10,6 +10,11 @@ class UserLocationRepository {
 
   static const _collectionPath = 'user_locations';
 
+  Future<UserLocation?> getByUserId(String userId) async {
+    final doc = await _firestore.collection(_collectionPath).doc(userId).get();
+    return doc.exists ? UserLocation.fromFirestore(doc) : null;
+  }
+
   /// Stream locations of users that are broadcasting their location.
   Stream<List<UserLocation>> streamUserLocations() {
     return _firestore
