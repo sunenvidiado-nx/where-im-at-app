@@ -50,6 +50,7 @@
       }
     }
   },
-  "userMarkerInfoShowWayButton": "Show way",
-  "you": "you"
+  "userMarkerInfoActionButton": "Get directions",
+  "you": "you",
+  "goBack": "Go back"
 }

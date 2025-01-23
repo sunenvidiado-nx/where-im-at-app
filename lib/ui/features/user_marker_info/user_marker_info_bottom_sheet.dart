@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/features/user_marker_info/user_marker_info_bottom_sheet_cubit.dart';
@@ -118,7 +119,7 @@ class _UserMarkerInfoBottomSheetState extends State<UserMarkerInfoBottomSheet> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Skeleton.ignore(
-                            child: ElevatedButton(
+                            child: ElevatedButton.icon(
                               onPressed: _onShowWayPressed,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
@@ -131,19 +132,14 @@ class _UserMarkerInfoBottomSheetState extends State<UserMarkerInfoBottomSheet> {
                                     : context.colorScheme.primary
                                         .withAlpha(120),
                               ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    context.l10n.userMarkerInfoShowWayButton,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.turn_sharp_right_outlined,
-                                    size: 22,
-                                    color: context.colorScheme.surface,
-                                  ),
-                                ],
+                              label: Text(
+                                context.l10n.userMarkerInfoActionButton,
                               ),
+                              icon: const Icon(
+                                Icons.turn_sharp_right_outlined,
+                                size: 22,
+                              ),
+                              iconAlignment: IconAlignment.end,
                             ),
                           ),
                         ],
@@ -169,10 +165,34 @@ class _UserMarkerInfoBottomSheetState extends State<UserMarkerInfoBottomSheet> {
     BuildContext context,
     UserMarkerInfoBottomSheetError state,
   ) {
-    return Center(
-      child: Text(
-        state.errorMessage,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              state.errorMessage,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: context.colorScheme.primary.withAlpha(170)),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: context.pop,
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                elevation: 4,
+                shadowColor: context.colorScheme.primary.withAlpha(120),
+              ),
+              label: Text(context.l10n.goBack),
+              icon: const Icon(Icons.arrow_back, size: 22),
+              iconAlignment: IconAlignment.end,
+            ),
+          ],
+        ),
       ),
     );
   }

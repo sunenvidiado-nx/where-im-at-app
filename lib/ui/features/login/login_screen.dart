@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: isLoading
                 ? null
                 : () {
@@ -145,18 +145,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     }
                   },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(context.l10n.signInButton),
-                const SizedBox(width: 6),
-                Icon(
-                  Icons.arrow_forward,
-                  size: 22,
-                  color: context.colorScheme.surface,
-                ),
-              ],
-            ),
+            label: Text(context.l10n.signInButton),
+            icon: const Icon(Icons.arrow_forward, size: 22),
+            iconAlignment: IconAlignment.end,
           ),
         ),
         const SizedBox(height: 16),

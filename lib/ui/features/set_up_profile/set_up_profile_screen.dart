@@ -193,7 +193,7 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: ElevatedButton(
+        child: ElevatedButton.icon(
           onPressed: isLoading
               ? null
               : () {
@@ -201,7 +201,9 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
                     _cubit.updateUserInfo(_usernameController.text);
                   }
                 },
-          child: Text(context.l10n.setUpProfileSetupButton),
+          label: Text(context.l10n.setUpProfileSetupButton),
+          icon: const Icon(Icons.arrow_forward, size: 22),
+          iconAlignment: IconAlignment.end,
         ),
       ),
     );

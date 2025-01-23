@@ -112,6 +112,7 @@ abstract class AppTheme {
   ElevatedButtonThemeData get _elevatedButtonTheme {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
+        iconColor: _colorScheme.surface,
         backgroundColor: _colorScheme.primary,
         foregroundColor: _colorScheme.surface,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

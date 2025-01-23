@@ -46,20 +46,11 @@ class RegisterScreen extends StatelessWidget {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: context.pop,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_back,
-                  size: 22,
-                  color: context.colorScheme.surface,
-                ),
-                const SizedBox(width: 6),
-                Text(context.l10n.registerBackToSignIn),
-              ],
-            ),
+            label: Text(context.l10n.registerBackToSignIn),
+            icon: const Icon(Icons.arrow_back, size: 22),
+            iconAlignment: IconAlignment.end,
           ),
         ),
       ),
