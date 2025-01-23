@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0] - 2025-01-23
+
+### Added
+
+- Added feature to tap and view details of a user's marker
+
+### Fixed
+
+- Fixed incorrect data being displayed on user markers pt. 3 😅
+
 ## [1.0.3] - 2025-01-22
 
 ### Added
