@@ -27,58 +27,56 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<SetUpProfileScreenCubit, SetUpProfileScreenState>(
-      listener: _handleSatateChange,
-      builder: (context, state) {
-        return Scaffold(
-          body: Form(
-            key: _formKey,
-            child: CustomScrollView(
-              slivers: [
-                _buildTitle(context),
-                _buildProfileContent(context),
-              ],
-            ),
+      listener: _handleStateChange,
+      builder: (context, state) => Scaffold(
+        body: Form(
+          key: _formKey,
+          child: CustomScrollView(
+            slivers: [
+              _buildTitle(),
+              _buildProfileContent(),
+            ],
           ),
-          bottomNavigationBar: _buildBottomButton(context),
-        );
-      },
+        ),
+        bottomNavigationBar: _buildBottomButton(
+          isLoading: state is SetUpProfileScreenLoading,
+        ),
+      ),
     );
   }
 
-  void _handleSatateChange(
-    BuildContext context,
-    SetUpProfileScreenState state,
-  ) {
-    if (state.errorMessage != null) {
-      context.showSnackbar(state.errorMessage!, type: AppSnackbarType.error);
+  void _handleStateChange(BuildContext context, SetUpProfileScreenState state) {
+    if (state is SetUpProfileScreenError) {
+      context.showSnackbar(state.errorMessage, type: AppSnackbarType.error);
+    }
+
+    if (state is SetUpProfileScreenSuccess) {
+      context.go(Routes.home);
     }
   }
 
-  Widget _buildTitle(BuildContext context) {
+  Widget _buildTitle() {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 72, 24, 0),
         child: Center(
           child: Text(
             context.l10n.setUpProfileTitle,
-            style: context.primaryTextTheme.displaySmall,
+            style: context.primaryTextTheme.headlineMedium,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProfileContent(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+  Widget _buildProfileContent() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: screenHeight * 0.07),
             _buildProfileAvatar(),
-            SizedBox(height: screenHeight * 0.06),
+            const SizedBox(height: 48),
             _buildUsernameField(),
           ],
         ),
@@ -89,13 +87,26 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
   Widget _buildProfileAvatar() {
     return BlocSelector<SetUpProfileScreenCubit, SetUpProfileScreenState,
         File?>(
-      selector: (state) => state.photo,
+      selector: (state) => switch (state) {
+        SetUpProfileScreenInitial(:final photo) => photo,
+        SetUpProfileScreenLoading(:final photo) => photo,
+        SetUpProfileScreenError(:final photo) => photo,
+        SetUpProfileScreenSuccess() => null,
+      },
       builder: (context, photo) {
-        return Stack(
-          children: [
-            CircleAvatar(
-              radius: 72,
-              child: ClipOval(
+        return SizedBox(
+          width: 160,
+          height: 160,
+          child: Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  color: context.colorScheme.surface,
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
                 child: photo == null
                     ? Image.asset(AppAssets.defaultPfp)
                     : Image.file(
@@ -105,25 +116,25 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
                         fit: BoxFit.cover,
                       ),
               ),
-            ),
-            Positioned(
-              bottom: -2,
-              right: -2,
-              child: IconButton(
-                style: IconButton.styleFrom(
-                  backgroundColor: context.colorScheme.surface,
-                  shape: const CircleBorder(),
-                  shadowColor: context.colorScheme.shadow,
-                  elevation: 3,
-                ),
-                onPressed: _showImagePicker,
-                icon: Icon(
-                  Icons.add_photo_alternate_outlined,
-                  color: context.colorScheme.primary,
+              Positioned(
+                bottom: -2,
+                right: -2,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.colorScheme.surface,
+                    shape: const CircleBorder(),
+                    shadowColor: context.colorScheme.shadow,
+                    elevation: 3,
+                  ),
+                  onPressed: _showImagePicker,
+                  icon: Icon(
+                    Icons.add_photo_alternate_outlined,
+                    color: context.colorScheme.primary,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -178,30 +189,19 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
     );
   }
 
-  Widget _buildBottomButton(BuildContext context) {
+  Widget _buildBottomButton({required bool isLoading}) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: BlocSelector<SetUpProfileScreenCubit, SetUpProfileScreenState,
-            bool>(
-          selector: (state) => state.isLoading,
-          builder: (context, isLoading) {
-            return ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (_formKey.currentState!.validate()) {
-                        await _cubit.updateUserInfo(_usernameController.text);
-
-                        if (_cubit.state.didSetUpProfile) {
-                          // ignore: use_build_context_synchronously
-                          context.go(Routes.home);
-                        }
-                      }
-                    },
-              child: Text(context.l10n.setUpProfileSetupButton),
-            );
-          },
+        child: ElevatedButton(
+          onPressed: isLoading
+              ? null
+              : () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    _cubit.updateUserInfo(_usernameController.text);
+                  }
+                },
+          child: Text(context.l10n.setUpProfileSetupButton),
         ),
       ),
     );

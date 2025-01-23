@@ -1,14 +1,23 @@
 part of 'login_screen_cubit.dart';
 
-@MappableClass()
-class LoginScreenState with LoginScreenStateMappable {
-  const LoginScreenState({
-    this.loading = false,
-    this.didLogIn = false,
-    this.errorMessage,
-  });
+sealed class LoginScreenState {
+  const LoginScreenState();
+}
 
-  final bool loading;
-  final bool didLogIn;
-  final String? errorMessage;
+final class LoginScreenInitial extends LoginScreenState {
+  const LoginScreenInitial();
+}
+
+final class LoginScreenLoading extends LoginScreenState {
+  const LoginScreenLoading();
+}
+
+final class LoginScreenError extends LoginScreenState {
+  const LoginScreenError(this.errorMessage);
+
+  final String errorMessage;
+}
+
+final class LoginScreenSuccess extends LoginScreenState {
+  const LoginScreenSuccess();
 }

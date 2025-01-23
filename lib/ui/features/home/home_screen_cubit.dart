@@ -12,8 +12,10 @@ import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/location_service.dart';
+import 'package:where_im_at/domain/models/address_response.dart';
 import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
+import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 part 'home_screen_cubit.mapper.dart';
 part 'home_screen_state.dart';
@@ -26,7 +28,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     this._userLocationRepository,
     this._userInfoRepository,
     this._secureStorage,
-  ) : super(const HomeScreenState());
+  ) : super(const HomeScreenInitial());
 
   final AuthService _authService;
   final LocationService _locationService;
@@ -52,43 +54,53 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
   Future<void> initialize() async {
     try {
+      emit(const HomeScreenLoading());
       final userInfo = await _userInfoRepository.getUserInfo(_userId);
 
       if (userInfo == null) {
-        emit(state.copyWith(shouldSetUpProfile: true));
-        return;
+        return emit(const HomeScreenShouldRedirectToSetUpProfile());
       }
 
       final currentLocation = await _locationService
           .getCurrentLocation()
           .then((position) => LatLng(position.latitude, position.longitude));
 
-      emit(state.copyWith(initialLocation: currentLocation));
-
       final isBroadcastingLocation =
-          await _secureStorage.read(key: _isBroadcastingLocationKey);
+          await _secureStorage.read(key: _isBroadcastingLocationKey) == 'true';
 
-      if (isBroadcastingLocation == 'true') await broadcastCurrentLocation();
+      emit(
+        HomeScreenLoaded(
+          initialLocation: currentLocation,
+          isBroadcastingLocation: isBroadcastingLocation,
+          userLocations: const [],
+        ),
+      );
+
+      if (isBroadcastingLocation) await broadcastCurrentLocation();
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
       _userLocationsSubscription = _userLocationsStream.listen((data) {
-        if (!const DeepCollectionEquality().equals(state.userLocations, data)) {
-          emit(state.copyWith(userLocations: data));
+        final currentState = state;
+        if (currentState is HomeScreenLoaded &&
+            !const DeepCollectionEquality()
+                .equals(currentState.userLocations, data)) {
+          emit(currentState.copyWith(userLocations: data));
         }
       });
     } on Exception catch (e) {
-      emit(state.copyWith(exception: e));
-    } finally {
-      emit(state.copyWith(exception: null));
+      emit(HomeScreenError(e.errorMessage));
     }
   }
 
   Future<void> broadcastCurrentLocation() async {
     try {
+      final currentState = state;
+      if (currentState is! HomeScreenLoaded) return;
+
       _currentLocationStream = _locationService.streamCurrentLocation();
       _locationSubscription =
           _currentLocationStream.listen(_updateUserLocation);
-      emit(state.copyWith(isBroadcastingLocation: true));
+      emit(currentState.copyWith(isBroadcastingLocation: true));
       await _secureStorage.write(
         key: _isBroadcastingLocationKey,
         value: 'true',
@@ -100,7 +112,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
-    emit(state.copyWith(isBroadcastingLocation: false));
+    final currentState = state;
+    if (currentState is! HomeScreenLoaded) return;
+
+    emit(currentState.copyWith(isBroadcastingLocation: false));
 
     final lastPosition = await _locationService.getCurrentLocation();
 
@@ -128,9 +143,19 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       }
 
       return userInfo;
-    } catch (e) {
-      emit(state.copyWith(exception: e));
-      rethrow; // TODO Handle this better
+    } on Exception catch (e) {
+      emit(HomeScreenError(e.errorMessage));
+      rethrow; // Handle this better
+    }
+  }
+
+  Future<AddressData> lookUpLocation(double latitude, double longitude) async {
+    try {
+      return (await _locationService.findPlacesByCoords(latitude, longitude))
+          .first;
+    } on Exception catch (e) {
+      emit(HomeScreenError(e.errorMessage));
+      rethrow;
     }
   }
 

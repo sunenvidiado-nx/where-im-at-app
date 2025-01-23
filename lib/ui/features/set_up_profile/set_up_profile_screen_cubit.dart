@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dart_mappable/dart_mappable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
@@ -11,7 +10,6 @@ import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 part 'set_up_profile_screen_state.dart';
-part 'set_up_profile_screen_cubit.mapper.dart';
 
 @injectable
 class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
@@ -19,7 +17,7 @@ class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
     this._userInfoRepository,
     this._authService,
     this._defaultProfilePictureService,
-  ) : super(const SetUpProfileScreenState());
+  ) : super(const SetUpProfileScreenInitial());
 
   final UserInfoRepository _userInfoRepository;
   final AuthService _authService;
@@ -34,19 +32,36 @@ class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
     );
 
     if (pickedFile != null) {
-      emit(state.copyWith(photo: File(pickedFile.path)));
+      final photo = File(pickedFile.path);
+      switch (state) {
+        case SetUpProfileScreenInitial():
+          emit(SetUpProfileScreenInitial(photo: photo));
+        case SetUpProfileScreenLoading():
+          emit(SetUpProfileScreenLoading(photo: photo));
+        case SetUpProfileScreenError(errorMessage: final errorMessage):
+          emit(SetUpProfileScreenError(errorMessage, photo: photo));
+        case SetUpProfileScreenSuccess():
+          break;
+      }
     }
   }
 
   Future<void> updateUserInfo(String username) async {
-    try {
-      emit(state.copyWith(isLoading: true));
+    final currentPhoto = switch (state) {
+      SetUpProfileScreenInitial(photo: final photo) => photo,
+      SetUpProfileScreenLoading(photo: final photo) => photo,
+      SetUpProfileScreenError(photo: final photo) => photo,
+      SetUpProfileScreenSuccess() => null,
+    };
 
-      final photoUrl = state.photo == null
+    try {
+      emit(SetUpProfileScreenLoading(photo: currentPhoto));
+
+      final photoUrl = currentPhoto == null
           ? await _defaultProfilePictureService.getUrl()
           : await _userInfoRepository.uploadUserPhoto(
               _authService.currentUser!.uid,
-              state.photo!,
+              currentPhoto,
             );
 
       await _userInfoRepository.createOrUpdate(
@@ -58,11 +73,9 @@ class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
         ),
       );
 
-      emit(state.copyWith(didSetUpProfile: true));
+      emit(const SetUpProfileScreenSuccess());
     } on Exception catch (e) {
-      emit(state.copyWith(errorMessage: e.errorMessage));
-    } finally {
-      emit(state.copyWith(isLoading: false, errorMessage: null));
+      emit(SetUpProfileScreenError(e.errorMessage, photo: currentPhoto));
     }
   }
 }

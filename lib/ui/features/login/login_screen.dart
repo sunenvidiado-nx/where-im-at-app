@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LoginScreenCubit, LoginScreenState>(
-      listener: _listener,
+      listener: _hadnleStateChange,
       builder: (context, state) => Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(24),
@@ -49,15 +49,21 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         bottomNavigationBar: SafeArea(
-          child: _buildBottomNavigationBar(),
+          child: _buildBottomNavigationBar(
+            isLoading: state is LoginScreenLoading,
+          ),
         ),
       ),
     );
   }
 
-  void _listener(BuildContext context, LoginScreenState state) {
-    if (state.errorMessage != null) {
-      context.showSnackbar(state.errorMessage!, type: AppSnackbarType.error);
+  void _hadnleStateChange(BuildContext context, LoginScreenState state) {
+    if (state is LoginScreenError) {
+      context.showSnackbar(state.errorMessage, type: AppSnackbarType.error);
+    }
+
+    if (state is LoginScreenSuccess) {
+      context.go(Routes.home);
     }
   }
 
@@ -121,45 +127,36 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar({required bool isLoading}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: BlocSelector<LoginScreenCubit, LoginScreenState, bool>(
-            selector: (state) => state.loading,
-            builder: (context, loading) {
-              return ElevatedButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        if (_formKey.currentState!.validate()) {
-                          await _cubit.login(
-                            _emailController.text,
-                            _passwordController.text,
-                          );
-
-                          // ignore: use_build_context_synchronously
-                          if (_cubit.state.didLogIn) context.go(Routes.home);
-                        }
-                      },
-                // child: Text(context.l10n.signInButton),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(context.l10n.signInButton),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 22,
-                      color: context.colorScheme.surface,
-                    ),
-                  ],
+          child: ElevatedButton(
+            onPressed: isLoading
+                ? null
+                : () {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      _cubit.login(
+                        _emailController.text,
+                        _passwordController.text,
+                      );
+                    }
+                  },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(context.l10n.signInButton),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.arrow_forward,
+                  size: 22,
+                  color: context.colorScheme.surface,
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),

@@ -5,7 +5,6 @@ import 'package:where_im_at/app/router/routes.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/ui/features/home/widgets/interactive_map.dart';
-import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,32 +26,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<HomeScreenCubit, HomeScreenState>(
-        listener: _listener,
-        builder: (context, state) => InteractiveMap(
-          initialLocation: state.initialLocation,
-          userLocations: state.userLocations,
-        ),
+        listener: _hadnleStateChange,
+        builder: (context, state) => switch (state) {
+          HomeScreenLoaded(:final initialLocation, :final userLocations) =>
+            InteractiveMap(
+              initialLocation: initialLocation,
+              userLocations: userLocations,
+            ),
+          _ => const InteractiveMap(userLocations: []),
+        },
       ),
       floatingActionButton: _buildFab(context),
     );
   }
 
-  void _listener(BuildContext context, HomeScreenState state) {
-    if (state.exception != null) {
+  void _hadnleStateChange(BuildContext context, HomeScreenState state) {
+    if (state is HomeScreenError) {
       context.showSnackbar(
-        (state.exception as Exception).errorMessage,
+        state.errorMessage,
         type: AppSnackbarType.error,
       );
     }
 
-    if (state.shouldSetUpProfile) {
+    if (state is HomeScreenShouldRedirectToSetUpProfile) {
       context.go(Routes.setUpProfile);
     }
   }
 
   Widget _buildFab(BuildContext context) {
     return BlocSelector<HomeScreenCubit, HomeScreenState, bool>(
-      selector: (state) => state.isBroadcastingLocation,
+      selector: (state) => switch (state) {
+        HomeScreenLoaded(:final isBroadcastingLocation) =>
+          isBroadcastingLocation,
+        _ => false,
+      },
       builder: (context, isBroadcastingLocation) {
         return FloatingActionButton(
           child: Icon(
