@@ -6,13 +6,13 @@ sealed class SetUpProfileScreenState {
 
 final class SetUpProfileScreenInitial extends SetUpProfileScreenState {
   const SetUpProfileScreenInitial({this.photo});
-  
+
   final File? photo;
 }
 
 final class SetUpProfileScreenLoading extends SetUpProfileScreenState {
   const SetUpProfileScreenLoading({this.photo});
-  
+
   final File? photo;
 }
 

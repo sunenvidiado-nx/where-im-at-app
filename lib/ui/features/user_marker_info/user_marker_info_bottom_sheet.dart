@@ -136,7 +136,8 @@ class _UserMarkerInfoBottomSheetState extends State<UserMarkerInfoBottomSheet> {
                               child: Row(
                                 children: [
                                   Text(
-                                      context.l10n.userMarkerInfoShowWayButton),
+                                    context.l10n.userMarkerInfoShowWayButton,
+                                  ),
                                   const SizedBox(width: 4),
                                   Icon(
                                     Icons.turn_sharp_right_outlined,
