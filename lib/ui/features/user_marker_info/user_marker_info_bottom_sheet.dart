@@ -79,24 +79,22 @@ class _UserMarkerInfoBottomSheetState extends State<UserMarkerInfoBottomSheet> {
               Text(
                 state?.isCurrentUser == true
                     ? '${state?.username} (${context.l10n.you})'
-                    : state?.username ?? 'Loading user',
+                    : state?.username ?? 'username',
                 style: Theme.of(context).primaryTextTheme.titleLarge,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.5,
-                child: Expanded(
-                  child: Text(
-                    context.l10n.somewhereInLocation(
-                      state == null
-                          ? 'planet earth we call home' // Placeholder text
-                          : '${state.approximateLocation}, ${state.city}',
-                    ),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: context.colorScheme.primary.withAlpha(170),
-                        ),
-                    textAlign: TextAlign.center,
+                width: MediaQuery.of(context).size.width * 0.55,
+                child: Text(
+                  context.l10n.somewhereInLocation(
+                    state == null
+                        ? 'planet earth' // Placeholder text
+                        : state.address,
                   ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.primary.withAlpha(170),
+                      ),
+                  textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 24),

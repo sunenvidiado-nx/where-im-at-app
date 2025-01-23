@@ -10,13 +10,13 @@ import 'package:where_im_at/domain/models/address_response.dart';
 class LocationService {
   LocationService(
     this._router,
-    @Named(DiKeys.positionStackApi) this._apiClient,
+    @Named(DiKeys.geocodingApi) this._apiClient,
   );
 
   final GoRouter _router;
   final Dio _apiClient;
 
-  final _geocodeCache = <String, List<AddressData>>{};
+  final _geocodeCache = <String, AddressDetails>{};
 
   Future<void> initialize() async {
     try {
@@ -70,7 +70,7 @@ class LocationService {
     });
   }
 
-  Future<List<AddressData>> findPlacesByCoords(
+  Future<AddressDetails> getAddressByCoords(
     double latitude,
     double longitude,
   ) async {
@@ -80,9 +80,10 @@ class LocationService {
       return _geocodeCache[cacheKey]!;
     }
 
-    final response =
-        await _apiClient.get('/reverse', queryParameters: {'query': cacheKey});
-    final addresses = AddressResponseMapper.fromMap(response.data!).data;
+    final response = await _apiClient
+        .get('/reverse', queryParameters: {'lat': latitude, 'lon': longitude});
+
+    final addresses = AddressResponseMapper.fromMap(response.data!).address;
 
     _geocodeCache[cacheKey] = addresses;
     return addresses;

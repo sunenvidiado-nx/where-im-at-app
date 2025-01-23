@@ -13,5 +13,5 @@ class EnvProd implements Env {
 
   @override
   @EnviedField()
-  final String positionStackApiKey = _EnvProd.positionStackApiKey;
+  final String geocodingApiKey = _EnvProd.geocodingApiKey;
 }

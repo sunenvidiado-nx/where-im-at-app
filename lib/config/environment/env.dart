@@ -9,6 +9,6 @@ abstract interface class Env {
   /// The API key for Stadia Maps.
   abstract final String stadiaMapsApiKey;
 
-  /// The API key for PositionStack.
-  abstract final String positionStackApiKey;
+  /// The API key for Geocoding.
+  abstract final String geocodingApiKey;
 }

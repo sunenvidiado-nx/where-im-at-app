@@ -149,10 +149,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     }
   }
 
-  Future<AddressData> lookUpLocation(double latitude, double longitude) async {
+  Future<AddressDetails> lookUpLocation(
+    double latitude,
+    double longitude,
+  ) async {
     try {
-      return (await _locationService.findPlacesByCoords(latitude, longitude))
-          .first;
+      return _locationService.getAddressByCoords(latitude, longitude);
     } on Exception catch (e) {
       emit(HomeScreenError(e.errorMessage));
       rethrow;

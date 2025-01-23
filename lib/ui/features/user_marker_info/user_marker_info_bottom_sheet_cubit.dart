@@ -41,7 +41,7 @@ class UserMarkerInfoBottomSheetCubit
       userInfo as UserInfo;
       userLocation as UserLocation;
 
-      final userAddress = await _locationService.findPlacesByCoords(
+      final address = await _locationService.getAddressByCoords(
         userLocation.latitude.toDouble(),
         userLocation.longitude.toDouble(),
       );
@@ -51,8 +51,7 @@ class UserMarkerInfoBottomSheetCubit
           isCurrentUser: userInfo.id == _authService.currentUser!.uid,
           username: userInfo.username,
           photoUrl: userInfo.photoUrl,
-          approximateLocation: userAddress.first.name,
-          city: userAddress.first.locality,
+          address: address.formattedAddress,
         ),
       );
     } on Exception catch (e) {

@@ -17,15 +17,13 @@ class UserMarkerInfoBottomSheetLoaded extends UserMarkerInfoBottomSheetState {
     required this.isCurrentUser,
     required this.username,
     required this.photoUrl,
-    required this.approximateLocation,
-    required this.city,
+    required this.address,
   });
 
   final bool isCurrentUser;
   final String username;
   final String photoUrl;
-  final String approximateLocation;
-  final String city;
+  final String address;
 }
 
 class UserMarkerInfoBottomSheetError extends UserMarkerInfoBottomSheetState {

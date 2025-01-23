@@ -8,12 +8,12 @@ import 'package:where_im_at/config/environment/env.dart';
 @module
 abstract class ApiClientProvider {
   @singleton
-  @Named(DiKeys.positionStackApi)
-  Dio positionStackApiClient(Env env) {
+  @Named(DiKeys.geocodingApi)
+  Dio geocodingApiClient(Env env) {
     final apiClient = Dio(
       BaseOptions(
-        baseUrl: 'http://api.positionstack.com/v1',
-        queryParameters: {'access_key': env.positionStackApiKey},
+        baseUrl: 'https://geocode.maps.co',
+        queryParameters: {'access_key': env.geocodingApiKey},
       ),
     )..interceptors.addAll([
         if (kDebugMode)
