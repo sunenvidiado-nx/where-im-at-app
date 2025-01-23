@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:where_im_at/app/themes/app_colors.dart';
-import 'package:where_im_at/config/constants/ui_constants.dart';
+import 'package:where_im_at/utils/constants/ui_constants.dart';
 
 @module
 abstract class AppTheme {

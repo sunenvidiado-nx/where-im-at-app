@@ -38,7 +38,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
     super.didUpdateWidget(oldWidget);
     if (widget._initialLocation != null &&
         widget._initialLocation != oldWidget._initialLocation) {
-      _mapController.move(widget._initialLocation!, 12.0);
+      _mapController.move(widget._initialLocation!, 12);
     }
   }
 
@@ -89,7 +89,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
           point: widget._userLocations[index].latLong,
           width: 200,
           height: 50,
-          child: UserMarker(userId: widget._userLocations[index].id!),
+          child: UserMarker(widget._userLocations[index].id!),
         ),
       ),
     );

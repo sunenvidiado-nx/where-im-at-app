@@ -41,5 +41,15 @@
   "locationServicesDisabledTitle": "Location Services Disabled",
   "locationServicesDisabledMessage": "This app needs location access to work properly. Please check your ",
   "locationServicesDisabledSettings": "device settings",
-  "locationServicesDisabledAndEnable": " and enable the location services."
+  "locationServicesDisabledAndEnable": " and enable the location services.",
+  "somewhereInLocation": "Somewhere in {location}",
+  "@somewhereInLocation": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "userMarkerInfoShowWayButton": "Show way",
+  "you": "you"
 }

@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
-import 'package:where_im_at/app/router/routes.dart';
+import 'package:where_im_at/app/router/bottom_sheet_page.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/ui/features/home/home_screen.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
@@ -12,6 +12,10 @@ import 'package:where_im_at/ui/features/no_location_services/no_location_service
 import 'package:where_im_at/ui/features/register/register_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen_cubit.dart';
+import 'package:where_im_at/ui/features/user_marker_info/user_marker_info_bottom_sheet.dart';
+import 'package:where_im_at/ui/features/user_marker_info/user_marker_info_bottom_sheet_cubit.dart';
+
+part 'routes.dart';
 
 @module
 abstract class RouterConfig {
@@ -56,6 +60,16 @@ abstract class RouterConfig {
           builder: (context, state) => BlocProvider(
             create: (_) => GetIt.I<SetUpProfileScreenCubit>(),
             child: const SetUpProfileScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '${Routes._userMarkerInfo}/:userId',
+          name: Routes._userMarkerInfo,
+          pageBuilder: (context, state) => BottomSheetPage(
+            child: BlocProvider(
+              create: (_) => GetIt.I<UserMarkerInfoBottomSheetCubit>(),
+              child: UserMarkerInfoBottomSheet(state.pathParameters['userId']!),
+            ),
           ),
         ),
       ],

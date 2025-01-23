@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:where_im_at/app/router/routes.dart';
+import 'package:where_im_at/app/router/router_config.dart';
 import 'package:where_im_at/ui/common_widgets/snackbars/app_snackbar.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/ui/features/home/widgets/interactive_map.dart';

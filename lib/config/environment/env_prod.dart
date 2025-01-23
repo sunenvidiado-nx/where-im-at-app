@@ -10,4 +10,8 @@ class EnvProd implements Env {
   @override
   @EnviedField()
   final String stadiaMapsApiKey = _EnvProd.stadiaMapsApiKey;
+
+  @override
+  @EnviedField()
+  final String positionStackApiKey = _EnvProd.positionStackApiKey;
 }
