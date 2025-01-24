@@ -12,8 +12,8 @@ import 'package:where_im_at/ui/features/no_location_services/no_location_service
 import 'package:where_im_at/ui/features/register/register_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen.dart';
 import 'package:where_im_at/ui/features/set_up_profile/set_up_profile_screen_cubit.dart';
-import 'package:where_im_at/ui/features/user_marker_info/user_marker_info_bottom_sheet.dart';
-import 'package:where_im_at/ui/features/user_marker_info/user_marker_info_bottom_sheet_cubit.dart';
+import 'package:where_im_at/ui/features/user_info/user_info_bottom_sheet.dart';
+import 'package:where_im_at/ui/features/user_info/user_info_bottom_sheet_cubit.dart';
 
 part 'routes.dart';
 
@@ -63,12 +63,20 @@ abstract class RouterConfig {
           ),
         ),
         GoRoute(
-          path: '${Routes._userMarkerInfo}/:userId',
-          name: Routes._userMarkerInfo,
+          path: '${Routes._userInfo}/:userId',
+          name: Routes._userInfo,
           pageBuilder: (context, state) => BottomSheetPage(
             child: BlocProvider(
-              create: (_) => GetIt.I<UserMarkerInfoBottomSheetCubit>(),
-              child: UserMarkerInfoBottomSheet(state.pathParameters['userId']!),
+              create: (_) => GetIt.I<UserInfoBottomSheetCubit>(),
+              child: UserInfoBottomSheet(
+                userId: state.pathParameters['userId']!,
+                currentUserIsNavigating:
+                    state.uri.queryParameters['currentUserIsNavigating'] ==
+                        'true',
+                isNavigatingToThisMarker:
+                    state.uri.queryParameters['isNavigatingToThisMarker'] ==
+                        'true',
+              ),
             ),
           ),
         ),

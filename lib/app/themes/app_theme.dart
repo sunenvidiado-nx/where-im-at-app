@@ -131,6 +131,9 @@ abstract class AppTheme {
     return FloatingActionButtonThemeData(
       backgroundColor: _colorScheme.surface,
       foregroundColor: _colorScheme.primary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UiConstants.borderRadius),
+      ),
     );
   }
 }

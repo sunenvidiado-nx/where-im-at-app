@@ -1,7 +1,9 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'package:flutter_map_cached_tile_provider/flutter_map_cached_tile_provider.dart';
 import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
@@ -9,19 +11,22 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:where_im_at/config/dependency_injection/di_keys.dart';
 import 'package:where_im_at/config/environment/env.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
+import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/ui/features/home/widgets/user_marker.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
+import 'package:where_im_at/utils/extensions/int_extensions.dart';
 
 class InteractiveMap extends StatefulWidget {
   const InteractiveMap({
-    required List<UserLocation> userLocations,
-    LatLng? initialLocation,
+    required this.userLocations,
+    this.userToUserRoute,
+    this.initialLocation,
     super.key,
-  })  : _userLocations = userLocations,
-        _initialLocation = initialLocation;
+  });
 
-  final List<UserLocation> _userLocations;
-  final LatLng? _initialLocation;
+  final List<UserLocation> userLocations;
+  final List<LatLng>? userToUserRoute;
+  final LatLng? initialLocation;
 
   @override
   State<InteractiveMap> createState() => _InteractiveMapState();
@@ -36,9 +41,9 @@ class _InteractiveMapState extends State<InteractiveMap> {
   @override
   void didUpdateWidget(InteractiveMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget._initialLocation != null &&
-        widget._initialLocation != oldWidget._initialLocation) {
-      _mapController.move(widget._initialLocation!, 12);
+    if (widget.initialLocation != null &&
+        widget.initialLocation != oldWidget.initialLocation) {
+      _mapController.move(widget.initialLocation!, 12);
     }
   }
 
@@ -63,6 +68,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
       ),
       children: [
         _buildMapLayer(),
+        _buildPolylines(),
         _buildUserLocationMarkers(),
         _buildAttributionButton(),
       ],
@@ -81,17 +87,40 @@ class _InteractiveMapState extends State<InteractiveMap> {
   }
 
   Widget _buildUserLocationMarkers() {
-    return MarkerLayer(
+    final cubit = context.read<HomeScreenCubit>();
+    return AnimatedMarkerLayer(
       markers: List.generate(
-        widget._userLocations.length,
-        (index) => Marker(
-          key: Key(widget._userLocations[index].id!),
-          point: widget._userLocations[index].latLong,
-          width: 200,
-          height: 50,
-          child: UserMarker(widget._userLocations[index].id!),
+        widget.userLocations.length,
+        (index) => AnimatedMarker(
+          key: Key(widget.userLocations[index].id!),
+          point: widget.userLocations[index].latLong,
+          duration: 150.milliseconds,
+          // TODO I just eyeballed these, there's prolly a better way to do it
+          width: 100,
+          height: 80,
+          alignment: Alignment.topCenter,
+          builder: (_, animation) => UserMarker(
+            animation: animation,
+            userId: widget.userLocations[index].id!,
+            isNavigatingToThisMarker:
+                cubit.isNavigatingToUser(widget.userLocations[index].id!),
+            currentUserIsNavigating: cubit.isCurrentlyNavigating(),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPolylines() {
+    return PolylineLayer(
+      polylines: [
+        if (widget.userToUserRoute != null)
+          Polyline(
+            points: widget.userToUserRoute!,
+            color: context.colorScheme.primary,
+            strokeWidth: 4,
+          ),
+      ],
     );
   }
 

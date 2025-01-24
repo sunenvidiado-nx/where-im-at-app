@@ -29,9 +29,13 @@ final class HomeScreenLoaded extends HomeScreenState
     required this.isBroadcastingLocation,
     required this.userLocations,
     required this.initialLocation,
+    this.userToUserRoute,
+    this.userIdToNavigateTo,
   });
 
   final bool isBroadcastingLocation;
   final List<UserLocation> userLocations;
   final LatLng initialLocation;
+  final List<LatLng>? userToUserRoute;
+  final String? userIdToNavigateTo;
 }

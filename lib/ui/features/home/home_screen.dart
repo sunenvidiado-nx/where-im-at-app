@@ -7,7 +7,14 @@ import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/ui/features/home/widgets/interactive_map.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    this.userIdToNavigate,
+    this.shouldStopCurrentNavigation = false,
+    super.key,
+  });
+
+  final String? userIdToNavigate;
+  final bool shouldStopCurrentNavigation;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -28,10 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: BlocConsumer<HomeScreenCubit, HomeScreenState>(
         listener: _hadnleStateChange,
         builder: (context, state) => switch (state) {
-          HomeScreenLoaded(:final initialLocation, :final userLocations) =>
-            InteractiveMap(
-              initialLocation: initialLocation,
-              userLocations: userLocations,
+          final HomeScreenLoaded state => InteractiveMap(
+              initialLocation: state.initialLocation,
+              userLocations: state.userLocations,
+              userToUserRoute: state.userToUserRoute,
             ),
           _ => const InteractiveMap(userLocations: []),
         },
@@ -42,10 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _hadnleStateChange(BuildContext context, HomeScreenState state) {
     if (state is HomeScreenError) {
-      context.showSnackbar(
-        state.errorMessage,
-        type: AppSnackbarType.error,
-      );
+      context.showSnackbar(state.errorMessage, type: AppSnackbarType.error);
     }
 
     if (state is HomeScreenShouldRedirectToSetUpProfile) {

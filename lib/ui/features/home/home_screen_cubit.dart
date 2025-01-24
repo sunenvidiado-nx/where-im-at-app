@@ -80,11 +80,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
       _userLocationsSubscription = _userLocationsStream.listen((data) {
-        final currentState = state;
-        if (currentState is HomeScreenLoaded &&
+        if (state is HomeScreenLoaded &&
             !const DeepCollectionEquality()
-                .equals(currentState.userLocations, data)) {
-          emit(currentState.copyWith(userLocations: data));
+                .equals((state as HomeScreenLoaded).userLocations, data)) {
+          emit((state as HomeScreenLoaded).copyWith(userLocations: data));
         }
       });
     } on Exception catch (e) {
@@ -112,10 +111,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
-    final currentState = state;
-    if (currentState is! HomeScreenLoaded) return;
+    if (state is! HomeScreenLoaded) return;
 
-    emit(currentState.copyWith(isBroadcastingLocation: false));
+    stopCurrentNavigation();
+
+    emit((state as HomeScreenLoaded).copyWith(isBroadcastingLocation: false));
 
     final lastPosition = await _locationService.getCurrentLocation();
 
@@ -161,6 +161,48 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     }
   }
 
+  Future<void> startNavigatingToUser(String userId) async {
+    if (state is! HomeScreenLoaded) return;
+
+    try {
+      final [destination, origin] = await Future.wait([
+        _userLocationRepository.getByUserId(userId),
+        _locationService.getCurrentLocation(),
+      ]);
+
+      destination as UserLocation?;
+      origin as Position;
+
+      if (destination == null) {
+        throw Exception('Could not find location for user $userId');
+      }
+
+      final path = await _locationService.getNavigationPath(
+        LatLng(origin.latitude, origin.longitude),
+        destination.latLong,
+      );
+
+      emit(
+        (state as HomeScreenLoaded).copyWith(
+          userToUserRoute: path,
+          userIdToNavigateTo: userId,
+        ),
+      );
+    } on Exception catch (e) {
+      emit(HomeScreenError(e.errorMessage));
+    }
+  }
+
+  void stopCurrentNavigation() {
+    if (state is! HomeScreenLoaded) return;
+    emit(
+      (state as HomeScreenLoaded).copyWith(
+        userToUserRoute: null,
+        userIdToNavigateTo: null,
+      ),
+    );
+  }
+
   Future<void> _updateUserLocation(Position position) async {
     await _userLocationRepository.createOrUpdate(
       UserLocation(
@@ -171,6 +213,18 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         updatedAt: DateTime.now(),
       ),
     );
+  }
+
+  bool isNavigatingToUser(String userId) {
+    final currentState = state;
+    if (currentState is! HomeScreenLoaded) return false;
+    return currentState.userIdToNavigateTo == userId;
+  }
+
+  bool isCurrentlyNavigating() {
+    final currentState = state;
+    if (currentState is! HomeScreenLoaded) return false;
+    return currentState.userIdToNavigateTo != null;
   }
 
   @override

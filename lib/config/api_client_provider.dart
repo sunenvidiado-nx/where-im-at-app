@@ -8,25 +8,37 @@ import 'package:where_im_at/config/environment/env.dart';
 @module
 abstract class ApiClientProvider {
   @singleton
+  PrettyDioLogger get prettyDioLogger {
+    return PrettyDioLogger(
+      requestHeader: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: true,
+      error: true,
+      compact: true,
+      maxWidth: 120,
+    );
+  }
+
+  @singleton
   @Named(DiKeys.geocodingApi)
-  Dio geocodingApiClient(Env env) {
+  Dio geocodingApiClient(Env env, PrettyDioLogger logger) {
     final apiClient = Dio(
       BaseOptions(
         baseUrl: 'https://geocode.maps.co',
         queryParameters: {'access_key': env.geocodingApiKey},
       ),
-    )..interceptors.addAll([
-        if (kDebugMode)
-          PrettyDioLogger(
-            requestHeader: true,
-            requestBody: true,
-            responseBody: true,
-            responseHeader: true,
-            error: true,
-            compact: true,
-            maxWidth: 120,
-          ),
-      ]);
+    )..interceptors.addAll([if (kDebugMode) logger]);
+
+    return apiClient;
+  }
+
+  @singleton
+  @Named(DiKeys.projectOsrmApi)
+  Dio projectOsrmClient(PrettyDioLogger logger) {
+    final apiClient = Dio(
+      BaseOptions(baseUrl: 'https://router.project-osrm.org/route/v1'),
+    )..interceptors.addAll([if (kDebugMode) logger]);
 
     return apiClient;
   }

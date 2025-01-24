@@ -5,98 +5,101 @@ import 'package:go_router/go_router.dart';
 import 'package:where_im_at/app/router/router_config.dart';
 import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
+import 'package:where_im_at/utils/constants/ui_constants.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
-import 'package:where_im_at/utils/extensions/int_extensions.dart';
 
 class UserMarker extends StatefulWidget {
-  const UserMarker(this.userId, {super.key});
+  const UserMarker({
+    required this.userId,
+    required this.isNavigatingToThisMarker,
+    required this.currentUserIsNavigating,
+    required this.animation,
+    super.key,
+  });
+
+  final Animation<double> animation;
 
   final String userId;
+  final bool isNavigatingToThisMarker;
+  final bool currentUserIsNavigating;
 
   @override
   State createState() => _UserMarkerState();
 }
 
 class _UserMarkerState extends State<UserMarker> {
-  UserInfo? userInfo;
+  late final _cubit = context.read<HomeScreenCubit>();
+  UserInfo? _userInfo;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final info =
-          await context.read<HomeScreenCubit>().getUserInfo(widget.userId);
-      if (mounted) setState(() => userInfo = info);
+      _userInfo = await _cubit.getUserInfo(widget.userId);
+      setState(() {});
     });
+  }
+
+  Future<void> _onTap() async {
+    final result = await context.push(
+      Routes.userInfo(
+        widget.userId,
+        widget.isNavigatingToThisMarker,
+        widget.currentUserIsNavigating,
+      ),
+    );
+
+    if (result == true) {
+      _cubit.stopCurrentNavigation();
+    }
+
+    if (result is String) {
+      _cubit.startNavigatingToUser(result);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return userInfo == null
+    return _userInfo == null
         ? const SizedBox.shrink()
-        : Transform.translate(
-            offset: const Offset(0, -30),
+        : ScaleTransition(
+            scale: widget.animation,
             child: InkWell(
-              onTap: () async {
-                await Future.delayed(150.milliseconds);
-                // ignore: use_build_context_synchronously
-                context.push(Routes.userMarkerInfo(widget.userId));
-              },
+              onTap: _onTap,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: context.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius:
+                          BorderRadius.circular(UiConstants.borderRadius),
                       boxShadow: [
                         BoxShadow(
-                          color: context.colorScheme.shadow.withAlpha(25),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: context.colorScheme.shadow.withAlpha(60),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1.5),
                         ),
                       ],
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    child: Row(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         CircleAvatar(
-                          radius: 14,
+                          radius: 16,
                           backgroundColor:
-                              context.colorScheme.primary.withAlpha(30),
-                          child: ClipOval(
-                            child: CachedNetworkImage(
-                              fadeInDuration: 150.milliseconds,
-                              fadeOutDuration: 150.milliseconds,
-                              imageUrl: userInfo!.photoUrl,
-                              width: 28,
-                              height: 28,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Icon(
-                                Icons.face_unlock_rounded,
-                                size: 20,
-                                color:
-                                    context.colorScheme.primary.withAlpha(120),
-                              ),
-                              errorWidget: (context, _, __) => Icon(
-                                Icons.face_unlock_rounded,
-                                size: 20,
-                                color: context.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
+                              context.colorScheme.primary.withAlpha(20),
+                          backgroundImage:
+                              CachedNetworkImageProvider(_userInfo!.photoUrl),
                         ),
-                        const SizedBox(width: 4),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 145),
-                          child: Text(
-                            userInfo!.username,
-                            style: context.primaryTextTheme.titleMedium,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _userInfo!.username,
+                          style: Theme.of(context).textTheme.labelLarge,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ],
                     ),
@@ -105,7 +108,7 @@ class _UserMarkerState extends State<UserMarker> {
                     size: const Size(14, 7),
                     painter: _TrianglePainter(
                       color: context.colorScheme.surface,
-                      shadowColor: context.colorScheme.shadow.withAlpha(25),
+                      shadowColor: context.colorScheme.shadow.withAlpha(60),
                     ),
                   ),
                 ],
@@ -142,7 +145,7 @@ class _TrianglePainter extends CustomPainter {
 
     // Draw shadow
     canvas.drawPath(
-      path.shift(const Offset(0, 1)),
+      path.shift(const Offset(0, 1.5)),
       shadowPaint,
     );
 

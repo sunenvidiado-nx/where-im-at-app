@@ -8,17 +8,16 @@ import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
 import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
-part 'user_marker_info_bottom_sheet_state.dart';
+part 'user_info_bottom_sheet_state.dart';
 
 @injectable
-class UserMarkerInfoBottomSheetCubit
-    extends Cubit<UserMarkerInfoBottomSheetState> {
-  UserMarkerInfoBottomSheetCubit(
+class UserInfoBottomSheetCubit extends Cubit<UserInfoBottomSheetState> {
+  UserInfoBottomSheetCubit(
     this._locationService,
     this._userInfoRepository,
     this._userLocationRepository,
     this._authService,
-  ) : super(const UserMarkerInfoBottomSheetInitial());
+  ) : super(const UserInfoBottomSheetInitial());
 
   final LocationService _locationService;
   final UserInfoRepository _userInfoRepository;
@@ -26,7 +25,7 @@ class UserMarkerInfoBottomSheetCubit
   final AuthService _authService;
 
   Future<void> initialize(String userId) async {
-    emit(const UserMarkerInfoBottomSheetLoading());
+    emit(const UserInfoBottomSheetLoading());
 
     try {
       final [userInfo, userLocation] = await Future.wait([
@@ -47,7 +46,7 @@ class UserMarkerInfoBottomSheetCubit
       );
 
       emit(
-        UserMarkerInfoBottomSheetLoaded(
+        UserInfoBottomSheetLoaded(
           isCurrentUser: userInfo.id == _authService.currentUser!.uid,
           username: userInfo.username,
           photoUrl: userInfo.photoUrl,
@@ -55,7 +54,7 @@ class UserMarkerInfoBottomSheetCubit
         ),
       );
     } on Exception catch (e) {
-      emit(UserMarkerInfoBottomSheetError(e.errorMessage));
+      emit(UserInfoBottomSheetError(e.errorMessage));
     }
   }
 }

@@ -31,12 +31,12 @@
   "setUpProfileUseCameraAction": "Use camera",
   "setUpProfileChooseFromGalleryAction": "Choose from gallery",
   "setUpProfileCancelAction": "Cancel",
-  "setUpProfileUsernameLabel": "Username",
-  "setUpProfileUsernameHint": "Your username",
-  "setUpProfileUsernameRequiredError": "Username is required",
-  "setUpProfileUsernameContainsSpaceError": "Username cannot contain spaces",
-  "setUpProfileUsernameTooShortError": "Username must be at least 3 characters long",
-  "setUpProfileUsernameTooLongError": "Username cannot be longer than 16 characters",
+  "setUpProfileNameLabel": "Nickname",
+  "setUpProfileNameHint": "Your nickname",
+  "setUpProfileNameRequiredError": "Nickname is required",
+  "setUpProfileNameContainsSpaceError": "Nickname cannot contain spaces",
+  "setUpProfileNameTooShortError": "Nickname must be at least 3 characters long",
+  "setUpProfileNameTooLongError": "Nickname cannot be longer than 12 characters",
   "setUpProfileSetupButton": "Set up profile",
   "locationServicesDisabledTitle": "Location Services Disabled",
   "locationServicesDisabledMessage": "This app needs location access to work properly. Please check your ",
@@ -50,7 +50,11 @@
       }
     }
   },
-  "userMarkerInfoActionButton": "Get directions",
+  "userInfoActionButton": "Get directions",
   "you": "you",
-  "goBack": "Go back"
+  "goBack": "Go back",
+  "navigationWarningMessage": "Starting navigation to this user's location will cancel your current navigation. Would you like to proceed?",
+  "getDirectionsButton": "Get directions",
+  "cancelButton": "Cancel",
+  "userInfoButtonStopNavigating": "Stop navigation"
 }

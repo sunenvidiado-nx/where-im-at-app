@@ -167,25 +167,25 @@ class _SetUpProfileScreenState extends State<SetUpProfileScreen> {
       controller: _usernameController,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return context.l10n.setUpProfileUsernameRequiredError;
+          return context.l10n.setUpProfileNameRequiredError;
         }
 
         if (value.contains(' ')) {
-          return context.l10n.setUpProfileUsernameContainsSpaceError;
+          return context.l10n.setUpProfileNameContainsSpaceError;
         }
 
         if (value.length < 3) {
-          return context.l10n.setUpProfileUsernameTooShortError;
+          return context.l10n.setUpProfileNameTooShortError;
         }
 
-        if (value.length > 16) {
-          return context.l10n.setUpProfileUsernameTooLongError;
+        if (value.length > 12) {
+          return context.l10n.setUpProfileNameTooLongError;
         }
 
         return null;
       },
-      labelText: context.l10n.setUpProfileUsernameLabel,
-      hintText: context.l10n.setUpProfileUsernameHint,
+      labelText: context.l10n.setUpProfileNameLabel,
+      hintText: context.l10n.setUpProfileNameHint,
     );
   }
 
