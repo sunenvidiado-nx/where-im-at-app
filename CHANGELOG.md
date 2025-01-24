@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0]
+
+### Added
+
+- Added feature to navigate directly to any user's location marker on the map.
+
+### Changed
+
+- Made buttons look cleaner.
+- Updated the user markers' design.
+
 ## [1.1.0] - 2025-01-23
 
 ### Added
