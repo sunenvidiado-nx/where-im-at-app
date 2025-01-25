@@ -12,6 +12,7 @@ import 'package:where_im_at/config/dependency_injection/di_keys.dart';
 import 'package:where_im_at/config/environment/env.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
+import 'package:where_im_at/ui/features/home/widgets/animated_polyline.dart';
 import 'package:where_im_at/ui/features/home/widgets/user_marker.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 import 'package:where_im_at/utils/extensions/int_extensions.dart';
@@ -68,7 +69,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
       ),
       children: [
         _buildMapLayer(),
-        _buildPolylines(),
+        if (widget.userToUserRoute != null) _buildPolylines(),
         _buildUserLocationMarkers(),
         _buildAttributionButton(),
       ],
@@ -112,16 +113,7 @@ class _InteractiveMapState extends State<InteractiveMap> {
   }
 
   Widget _buildPolylines() {
-    return PolylineLayer(
-      polylines: [
-        if (widget.userToUserRoute != null)
-          Polyline(
-            points: widget.userToUserRoute!,
-            color: context.colorScheme.primary,
-            strokeWidth: 4,
-          ),
-      ],
-    );
+    return AnimatedPolyline(widget.userToUserRoute!);
   }
 
   Widget _buildAttributionButton() {
