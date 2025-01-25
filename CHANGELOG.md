@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.1]
+
+### Added
+
+- Added smooth route animation when displaying directions to another user marker.
+
+### Changed
+
+- Upgraded to Flutter 3.27.3
+
 ## [1.2.0]
 
 ### Added
