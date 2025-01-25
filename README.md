@@ -24,12 +24,24 @@ git clone https://github.com/sunenvidiado-nx/where-im-at-app.git
 flutter pub get
 ```
 
-3. Create `.env` file
+3. Set up API Keys
+- Create a free account at [https://stadiamaps.com](https://stadiamaps.com/) and generate an API key
+- Get a Geocoding API key from [https://geocode.maps.co](https://geocode.maps.co/)
+
+4. Create and configure `.env` file
 ```bash
 cp .env.example .env
 ```
+Open the generated `.env` file and replace the placeholder values:
+```
+STADIA_MAPS_API_KEY=your_stadia_maps_api_key_here
+GEOCODING_API_KEY=your_maps_co_api_key_here
+```
+Make sure to:
+- Replace `your_stadia_maps_api_key_here` with your actual Stadia Maps API key
+- Replace `your_maps_co_api_key_here` with your actual Geocoding API key
 
-4. Run code generation
+5. Run code generation
 ```bash
 # Generate code for build runner
 flutter pub run build_runner build --delete-conflicting-outputs
@@ -38,7 +50,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 flutter gen-l10n
 ```
 
-5. Set up Firebase
+6. Set up Firebase
 ```bash
 # Install FlutterFire CLI globally
 dart pub global activate flutterfire_cli
@@ -46,9 +58,6 @@ dart pub global activate flutterfire_cli
 # Configure Firebase (follow the interactive prompts)
 flutterfire configure
 ```
-
-6. Set up Stadia Maps
-- Create a free account at [Stadia Maps](https://stadiamaps.com/), generate an API key, and add it to your `.env` file as `STADIA_MAPS_API_KEY`.
 
 ### Running the App ▶️
 ```bash
