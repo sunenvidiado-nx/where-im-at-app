@@ -7,6 +7,7 @@ import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/ui/features/home/home_screen_cubit.dart';
 import 'package:where_im_at/utils/constants/ui_constants.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
+import 'package:where_im_at/utils/extensions/int_extensions.dart';
 
 class UserMarker extends StatefulWidget {
   const UserMarker({
@@ -91,8 +92,21 @@ class _UserMarkerState extends State<UserMarker> {
                           radius: 16,
                           backgroundColor:
                               context.colorScheme.primary.withAlpha(20),
-                          backgroundImage:
-                              CachedNetworkImageProvider(_userInfo!.photoUrl),
+                          child: CachedNetworkImage(
+                            imageUrl: _userInfo!.photoUrl,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                const SizedBox.shrink(),
+                            fadeInDuration: 200.milliseconds,
+                          ),
                         ),
                         const SizedBox(height: 3),
                         Text(
