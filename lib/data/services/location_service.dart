@@ -23,25 +23,20 @@ class LocationService {
 
   Future<void> initialize() async {
     try {
-      var serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-      if (!serviceEnabled) {
-        throw Exception();
-      }
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) throw Exception();
 
       var permission = await Geolocator.checkPermission();
-
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-
-        if (permission == LocationPermission.denied) {
-          throw Exception();
-        }
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Location permission denied');
       }
+
+      return;
     } catch (_) {
       _router.go(Routes.noLocationServices);
     }
@@ -50,15 +45,17 @@ class LocationService {
   Future<Position> getCurrentLocation([
     LocationAccuracy accuracy = LocationAccuracy.high,
   ]) async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
+    await initialize();
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings:
+            LocationSettings(accuracy: accuracy, distanceFilter: 100),
+      );
+      return position;
+    } catch (error) {
       _router.go(Routes.noLocationServices);
-      throw Exception('Location services disabled');
+      rethrow;
     }
-    return Geolocator.getCurrentPosition(
-      locationSettings:
-          LocationSettings(accuracy: accuracy, distanceFilter: 100),
-    );
   }
 
   Stream<Position> streamCurrentLocation([
