@@ -22,7 +22,8 @@ void main() {
     await _configureFirebase(); // Must be called first before other initialization
     await configureDependencies();
     await _configureLocationService();
-    await _configureNavigationAndStatusBarColors();
+
+    _configureNavigationAndStatusBarColors();
 
     runApp(const App());
   });
@@ -45,7 +46,7 @@ Future<void> _configureLocationService() async {
   await GetIt.I<LocationService>().initialize();
 }
 
-Future<void> _configureNavigationAndStatusBarColors() async {
+void _configureNavigationAndStatusBarColors() {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
