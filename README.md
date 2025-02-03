@@ -10,7 +10,7 @@ A Flutter app to share your current location with trusted contacts. Just tap, an
 - 🔐 User authentication
 
 > [!NOTE]
-> Note: This app is for personal and demo use only - not intended for navigation or production use since it hasn't been fully tested for those purposes.
+> This app is for personal and demo use only - not intended for navigation or production use since it hasn't been fully tested for those purposes.
 
 ## Prerequisites 🛠️
 
