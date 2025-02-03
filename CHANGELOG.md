@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0]
+
+### Added
+
+- Added feature to fetch location while app is in the background (unstable).
+
+### Fixed
+
+- Fixed issue with markers displaying incorrectly on the map.
+
 ## [1.2.1]
 
 ### Added
