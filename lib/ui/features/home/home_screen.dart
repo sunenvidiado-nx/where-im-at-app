@@ -58,26 +58,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFab(BuildContext context) {
-    return BlocSelector<HomeScreenCubit, HomeScreenState, bool>(
-      selector: (state) => switch (state) {
-        HomeScreenLoaded(:final isBroadcastingLocation) =>
-          isBroadcastingLocation,
-        _ => false,
-      },
-      builder: (context, isBroadcastingLocation) {
+    return BlocSelector<HomeScreenCubit, HomeScreenState,
+        ({bool isLoading, bool isBroadcasting})>(
+      selector: (state) => (
+        isLoading: state is HomeScreenLoading,
+        isBroadcasting: switch (state) {
+          HomeScreenLoaded(:final isBroadcastingLocation) =>
+            isBroadcastingLocation,
+          _ => false,
+        },
+      ),
+      builder: (context, status) {
         return FloatingActionButton(
+          onPressed: status.isLoading
+              ? null
+              : () {
+                  if (status.isBroadcasting) {
+                    _cubit.stopCurrentLocationBroadcast();
+                  } else {
+                    _cubit.broadcastCurrentLocation();
+                  }
+                },
           child: Icon(
-            isBroadcastingLocation
+            status.isBroadcasting
                 ? Icons.location_disabled_outlined
                 : Icons.my_location_outlined,
           ),
-          onPressed: () {
-            if (isBroadcastingLocation) {
-              _cubit.stopCurrentLocationBroadcast();
-            } else {
-              _cubit.broadcastCurrentLocation();
-            }
-          },
         );
       },
     );

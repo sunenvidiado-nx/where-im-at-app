@@ -15,7 +15,8 @@ class UserLocationRepository {
     return doc.exists ? UserLocation.fromFirestore(doc) : null;
   }
 
-  /// Stream locations of users that are broadcasting their location.
+  /// Returns a stream of user locations for users who are currently broadcasting
+  /// their location
   Stream<List<UserLocation>> streamUserLocations() {
     return _firestore
         .collection(_collectionPath)
@@ -24,11 +25,25 @@ class UserLocationRepository {
         .map((s) => s.docs.map(UserLocation.fromFirestore).toList());
   }
 
-  /// Creates or updates a user's location in Firestore.
+  /// Returns a list of user locations for users who are currently broadcasting
+  /// their location
+  Future<List<UserLocation>> getUserLocations() async {
+    final snapshot = await _firestore
+        .collection(_collectionPath)
+        .where('is_broadcasting', isEqualTo: true)
+        .get();
+
+    return snapshot.docs.map(UserLocation.fromFirestore).toList();
+  }
+
   Future<void> createOrUpdate(UserLocation userLocation) async {
-    await _firestore.collection(_collectionPath).doc(userLocation.id).set(
-          userLocation.toFirestoreMap(),
-          SetOptions(merge: true),
-        );
+    final docRef = _firestore.collection(_collectionPath).doc(userLocation.id);
+    final docSnapshot = await docRef.get();
+
+    if (docSnapshot.exists) {
+      await docRef.update(userLocation.toFirestoreMap());
+    } else {
+      await docRef.set(userLocation.toFirestoreMap());
+    }
   }
 }

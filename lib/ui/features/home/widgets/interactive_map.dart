@@ -118,15 +118,23 @@ class _InteractiveMapState extends State<InteractiveMap> {
 
   Widget _buildAttributionButton() {
     return Positioned(
-      left: 0,
+      left: 10,
       top: 0,
       child: SafeArea(
-        child: IconButton(
-          icon: Icon(
-            Icons.info_outline_rounded,
-            color: context.colorScheme.primary.withAlpha(120),
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: IconButton(
+            style: IconButton.styleFrom(
+              backgroundColor: context.colorScheme.surface,
+              padding: EdgeInsets.zero,
+            ),
+            icon: Icon(
+              Icons.info_outline_rounded,
+              color: context.colorScheme.primary.withAlpha(100),
+            ),
+            onPressed: _showAttributionBottomSheet,
           ),
-          onPressed: _showAttributionBottomSheet,
         ),
       ),
     );

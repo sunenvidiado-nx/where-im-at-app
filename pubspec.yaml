@@ -21,10 +21,12 @@ dependencies:
   firebase_storage: ^12.4.0
   flutter:
     sdk: flutter
+  flutter_background_service: ^5.1.0
   flutter_bloc: ^9.0.0
   flutter_cache_manager: ^3.4.1
   flutter_html: ^3.0.0-beta.2
   flutter_keyboard_visibility_temp_fork: ^0.1.4
+  flutter_local_notifications: ^18.0.1
   flutter_localizations:
     sdk: flutter
   flutter_map: ^7.0.2
@@ -33,7 +35,6 @@ dependencies:
     git:
       url: https://github.com/physia/kflutter.git
       path: flutter_map_cached_tile_provider
-  flutter_secure_storage: ^9.2.4
   flutter_styled_toast: ^2.2.1
   flutter_svg: ^2.0.17
   geolocator: ^13.0.2

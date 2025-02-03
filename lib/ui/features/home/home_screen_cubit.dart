@@ -1,10 +1,8 @@
 import 'dart:async';
 
-// ignore: depend_on_referenced_packages
-import 'package:collection/collection.dart';
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart';
@@ -27,17 +25,14 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     this._locationService,
     this._userLocationRepository,
     this._userInfoRepository,
-    this._secureStorage,
+    this._backgroundService,
   ) : super(const HomeScreenInitial());
 
   final AuthService _authService;
   final LocationService _locationService;
   final UserLocationRepository _userLocationRepository;
   final UserInfoRepository _userInfoRepository;
-  final FlutterSecureStorage _secureStorage;
-
-  // Generate keys here: http://bit.ly/random-strings-generator
-  static const _isBroadcastingLocationKey = '3VWwaaP7gw05';
+  final FlutterBackgroundService _backgroundService;
 
   late Stream<Position> _currentLocationStream;
   late Stream<List<UserLocation>> _userLocationsStream;
@@ -65,8 +60,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
           .getCurrentLocation()
           .then((position) => LatLng(position.latitude, position.longitude));
 
-      final isBroadcastingLocation =
-          await _secureStorage.read(key: _isBroadcastingLocationKey) == 'true';
+      final isBroadcastingLocation = await isUserBroadcastingLocation();
 
       emit(
         HomeScreenLoaded(
@@ -76,13 +70,17 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         ),
       );
 
-      if (isBroadcastingLocation) await broadcastCurrentLocation();
+      if (isBroadcastingLocation) {
+        await broadcastCurrentLocation();
+      } else {
+        if (await _backgroundService.isRunning()) {
+          _backgroundService.invoke('stopService');
+        }
+      }
 
       _userLocationsStream = _userLocationRepository.streamUserLocations();
       _userLocationsSubscription = _userLocationsStream.listen((data) {
-        if (state is HomeScreenLoaded &&
-            !const DeepCollectionEquality()
-                .equals((state as HomeScreenLoaded).userLocations, data)) {
+        if (state is HomeScreenLoaded) {
           emit((state as HomeScreenLoaded).copyWith(userLocations: data));
         }
       });
@@ -100,10 +98,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       _locationSubscription =
           _currentLocationStream.listen(_updateUserLocation);
       emit(currentState.copyWith(isBroadcastingLocation: true));
-      await _secureStorage.write(
-        key: _isBroadcastingLocationKey,
-        value: 'true',
-      );
+      _backgroundService.startService();
     } catch (e) {
       await stopCurrentLocationBroadcast();
       rethrow;
@@ -111,27 +106,36 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
-    if (state is! HomeScreenLoaded) return;
+    final loadedState = state as HomeScreenLoaded;
 
+    emit(const HomeScreenLoading());
+    _backgroundService.invoke('stopService');
     stopCurrentNavigation();
 
-    emit((state as HomeScreenLoaded).copyWith(isBroadcastingLocation: false));
+    final finalLocation = await _locationService.getCurrentLocation();
 
-    final lastPosition = await _locationService.getCurrentLocation();
-
+    // Clean up subscriptions and update final location
     await Future.wait([
       _locationSubscription?.cancel() ?? Future.value(),
       _userLocationRepository.createOrUpdate(
         UserLocation(
           id: _userId,
-          latitude: lastPosition.latitude,
-          longitude: lastPosition.longitude,
+          latitude: finalLocation.latitude,
+          longitude: finalLocation.longitude,
           isBroadcasting: false,
           updatedAt: DateTime.now(),
         ),
       ),
-      _secureStorage.delete(key: _isBroadcastingLocationKey),
     ]);
+
+    emit(
+      loadedState.copyWith(
+        isBroadcastingLocation: false,
+        // Refresh user locations after stopping broadcast to ensure UI
+        // shows latest state
+        userLocations: await _userLocationRepository.getUserLocations(),
+      ),
+    );
   }
 
   Future<UserInfo> getUserInfo(String userId) async {
@@ -213,6 +217,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         updatedAt: DateTime.now(),
       ),
     );
+  }
+
+  Future<bool> isUserBroadcastingLocation() async {
+    final userLocation = await _userLocationRepository.getByUserId(_userId);
+    return userLocation?.isBroadcasting ?? false;
   }
 
   bool isNavigatingToUser(String userId) {
