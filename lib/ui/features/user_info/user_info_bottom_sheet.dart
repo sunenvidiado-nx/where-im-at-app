@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:where_im_at/ui/features/user_info/user_info_bottom_sheet_cubit.dart';
 import 'package:where_im_at/utils/constants/happy_kaomojis.dart';
+import 'package:where_im_at/utils/constants/sad_kaomojis.dart';
 import 'package:where_im_at/utils/constants/ui_constants.dart';
 import 'package:where_im_at/utils/extensions/build_context_extensions.dart';
 
@@ -185,31 +186,64 @@ class _UserInfoBottomSheetState extends State<UserInfoBottomSheet> {
     UserInfoBottomSheetError state,
   ) {
     return Container(
-      color: context.colorScheme.surface,
-      child: Center(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: context.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(UiConstants.borderRadius),
+          topRight: Radius.circular(UiConstants.borderRadius),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              state.errorMessage,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: context.colorScheme.primary.withAlpha(170)),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: context.pop,
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                elevation: 4,
-                shadowColor: context.colorScheme.primary.withAlpha(120),
+            SizedBox(
+              height: 142,
+              child: Center(
+                child: Text(
+                  SadKaomojis.random,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: context.colorScheme.primary.withAlpha(30),
+                      ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              label: Text(context.l10n.goBack),
-              icon: const Icon(Icons.arrow_back, size: 22),
-              iconAlignment: IconAlignment.end,
             ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.55,
+              child: Text(
+                state.errorMessage,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.primary.withAlpha(170)),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 60,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: context.pop,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      elevation: 4,
+                      shadowColor: context.colorScheme.primary.withAlpha(120),
+                    ),
+                    label: Text(context.l10n.goBack),
+                    icon: const Icon(Icons.arrow_back, size: 22),
+                    iconAlignment: IconAlignment.start,
+                  ),
+                ],
+              ),
+            ),
+            const SafeArea(child: SizedBox.shrink()),
           ],
         ),
       ),

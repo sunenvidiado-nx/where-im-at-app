@@ -7,12 +7,14 @@ import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/default_profile_picture_service.dart';
 import 'package:where_im_at/domain/models/user_info.dart';
+import 'package:where_im_at/utils/exceptions/exception_handler.dart';
 import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 part 'set_up_profile_screen_state.dart';
 
 @injectable
-class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
+class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState>
+    with ExceptionHandler {
   SetUpProfileScreenCubit(
     this._userInfoRepository,
     this._authService,
@@ -54,28 +56,35 @@ class SetUpProfileScreenCubit extends Cubit<SetUpProfileScreenState> {
       SetUpProfileScreenSuccess() => null,
     };
 
-    try {
-      emit(SetUpProfileScreenLoading(photo: currentPhoto));
+    await guard(
+      () async {
+        emit(SetUpProfileScreenLoading(photo: currentPhoto));
 
-      final photoUrl = currentPhoto == null
-          ? await _defaultProfilePictureService.getUrl()
-          : await _userInfoRepository.uploadUserPhoto(
-              _authService.currentUser!.uid,
-              currentPhoto,
-            );
+        final photoUrl = currentPhoto == null
+            ? await _defaultProfilePictureService.getUrl()
+            : await _userInfoRepository.uploadUserPhoto(
+                _authService.currentUser!.uid,
+                currentPhoto,
+              );
 
-      await _userInfoRepository.createOrUpdate(
-        UserInfo(
-          id: _authService.currentUser!.uid,
-          username: username,
-          photoUrl: photoUrl,
-          updatedAt: DateTime.now(),
-        ),
-      );
+        await _userInfoRepository.createOrUpdate(
+          UserInfo(
+            id: _authService.currentUser!.uid,
+            username: username,
+            photoUrl: photoUrl,
+            updatedAt: DateTime.now(),
+          ),
+        );
 
-      emit(const SetUpProfileScreenSuccess());
-    } on Exception catch (e) {
-      emit(SetUpProfileScreenError(e.errorMessage, photo: currentPhoto));
-    }
+        emit(const SetUpProfileScreenSuccess());
+      },
+      onError: (error, stackTrace) {
+        if (error is Exception) {
+          emit(
+            SetUpProfileScreenError(error.errorMessage, photo: currentPhoto),
+          );
+        }
+      },
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -20,6 +21,8 @@ abstract class DiModules {
   FirebaseFirestore get firestore => FirebaseFirestore.instance;
 
   FirebaseStorage get firebaseStorage => FirebaseStorage.instance;
+
+  FirebaseCrashlytics get firebaseCrashlytics => FirebaseCrashlytics.instance;
 
   FlutterBackgroundService get backgroundService => FlutterBackgroundService();
 

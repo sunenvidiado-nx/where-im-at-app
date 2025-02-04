@@ -10,16 +10,16 @@ import 'package:where_im_at/data/repositories/user_info_repository.dart';
 import 'package:where_im_at/data/repositories/user_location_repository.dart';
 import 'package:where_im_at/data/services/auth_service.dart';
 import 'package:where_im_at/data/services/location_service.dart';
-import 'package:where_im_at/domain/models/address_response.dart';
 import 'package:where_im_at/domain/models/user_info.dart';
 import 'package:where_im_at/domain/models/user_location.dart';
+import 'package:where_im_at/utils/exceptions/exception_handler.dart';
 import 'package:where_im_at/utils/extensions/exception_extensions.dart';
 
 part 'home_screen_cubit.mapper.dart';
 part 'home_screen_state.dart';
 
 @injectable
-class HomeScreenCubit extends Cubit<HomeScreenState> {
+class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
   HomeScreenCubit(
     this._authService,
     this._locationService,
@@ -48,61 +48,68 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   String get _userId => _authService.currentUser!.uid;
 
   Future<void> initialize() async {
-    try {
-      emit(const HomeScreenLoading());
-      final userInfo = await _userInfoRepository.getUserInfo(_userId);
+    await guard(
+      () async {
+        emit(const HomeScreenLoading());
+        final userInfo = await _userInfoRepository.getUserInfo(_userId);
 
-      if (userInfo == null) {
-        return emit(const HomeScreenShouldRedirectToSetUpProfile());
-      }
-
-      final currentLocation = await _locationService
-          .getCurrentLocation()
-          .then((position) => LatLng(position.latitude, position.longitude));
-
-      final isBroadcastingLocation = await isUserBroadcastingLocation();
-
-      emit(
-        HomeScreenLoaded(
-          initialLocation: currentLocation,
-          isBroadcastingLocation: isBroadcastingLocation,
-          userLocations: const [],
-        ),
-      );
-
-      if (isBroadcastingLocation) {
-        await broadcastCurrentLocation();
-      } else {
-        if (await _backgroundService.isRunning()) {
-          _backgroundService.invoke('stopService');
+        if (userInfo == null) {
+          return emit(const HomeScreenShouldRedirectToSetUpProfile());
         }
-      }
 
-      _userLocationsStream = _userLocationRepository.streamUserLocations();
-      _userLocationsSubscription = _userLocationsStream.listen((data) {
-        if (state is HomeScreenLoaded) {
-          emit((state as HomeScreenLoaded).copyWith(userLocations: data));
+        final currentLocation = await _locationService
+            .getCurrentLocation()
+            .then((position) => LatLng(position.latitude, position.longitude));
+
+        final isBroadcastingLocation = await isUserBroadcastingLocation();
+
+        emit(
+          HomeScreenLoaded(
+            initialLocation: currentLocation,
+            isBroadcastingLocation: isBroadcastingLocation,
+            userLocations: const [],
+          ),
+        );
+
+        if (isBroadcastingLocation) {
+          await broadcastCurrentLocation();
+        } else {
+          if (await _backgroundService.isRunning()) {
+            _backgroundService.invoke('stopService');
+          }
         }
-      });
-    } on Exception catch (e) {
-      emit(HomeScreenError(e.errorMessage));
-    }
+
+        _userLocationsStream = _userLocationRepository.streamUserLocations();
+        _userLocationsSubscription = _userLocationsStream.listen((data) {
+          if (state is HomeScreenLoaded) {
+            emit((state as HomeScreenLoaded).copyWith(userLocations: data));
+          }
+        });
+      },
+      onError: (error, stackTrace) {
+        if (error is Exception) {
+          emit(HomeScreenError(error.errorMessage));
+        }
+      },
+    );
   }
 
   Future<void> broadcastCurrentLocation() async {
-    try {
-      final currentState = state;
-      if (currentState is! HomeScreenLoaded) return;
+    await guard(
+      () async {
+        final currentState = state;
+        if (currentState is! HomeScreenLoaded) return;
 
-      _currentLocationStream = _locationService.streamCurrentLocation();
-      _locationSubscription =
-          _currentLocationStream.listen(_updateUserLocation);
-      emit(currentState.copyWith(isBroadcastingLocation: true));
-      _backgroundService.startService();
-    } catch (e) {
-      await stopCurrentLocationBroadcast();
-      rethrow;
-    }
+        _currentLocationStream = _locationService.streamCurrentLocation();
+        _locationSubscription =
+            _currentLocationStream.listen(_updateUserLocation);
+        emit(currentState.copyWith(isBroadcastingLocation: true));
+        _backgroundService.startService();
+      },
+      onError: (error, stackTrace) async {
+        await stopCurrentLocationBroadcast();
+      },
+    );
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
@@ -138,63 +145,62 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     );
   }
 
-  Future<UserInfo> getUserInfo(String userId) async {
-    try {
-      final userInfo = await _userInfoRepository.getUserInfo(userId);
+  Future<UserInfo?> getUserInfo(String userId) async {
+    UserInfo? userInfo;
 
-      if (userInfo == null) {
-        throw Exception('Could not retrieve user info for user $userId');
-      }
+    await guard(
+      () async {
+        userInfo = await _userInfoRepository.getUserInfo(userId);
 
-      return userInfo;
-    } on Exception catch (e) {
-      emit(HomeScreenError(e.errorMessage));
-      rethrow; // Handle this better
-    }
-  }
+        if (userInfo == null) {
+          throw Exception('Could not retrieve user info for user $userId');
+        }
+      },
+      onError: (error, stackTrace) {
+        if (error is Exception) {
+          emit(HomeScreenError(error.errorMessage));
+        }
+      },
+    );
 
-  Future<AddressDetails> lookUpLocation(
-    double latitude,
-    double longitude,
-  ) async {
-    try {
-      return _locationService.getAddressByCoords(latitude, longitude);
-    } on Exception catch (e) {
-      emit(HomeScreenError(e.errorMessage));
-      rethrow;
-    }
+    return userInfo;
   }
 
   Future<void> startNavigatingToUser(String userId) async {
     if (state is! HomeScreenLoaded) return;
 
-    try {
-      final [destination, origin] = await Future.wait([
-        _userLocationRepository.getByUserId(userId),
-        _locationService.getCurrentLocation(),
-      ]);
+    await guard(
+      () async {
+        final [destination, origin] = await Future.wait([
+          _userLocationRepository.getByUserId(userId),
+          _locationService.getCurrentLocation(),
+        ]);
 
-      destination as UserLocation?;
-      origin as Position;
+        destination as UserLocation?;
+        origin as Position;
 
-      if (destination == null) {
-        throw Exception('Could not find location for user $userId');
-      }
+        if (destination == null) {
+          throw Exception('Could not find location for user $userId');
+        }
 
-      final path = await _locationService.getNavigationPath(
-        LatLng(origin.latitude, origin.longitude),
-        destination.latLong,
-      );
+        final path = await _locationService.getNavigationPath(
+          LatLng(origin.latitude, origin.longitude),
+          destination.latLong,
+        );
 
-      emit(
-        (state as HomeScreenLoaded).copyWith(
-          userToUserRoute: path,
-          userIdToNavigateTo: userId,
-        ),
-      );
-    } on Exception catch (e) {
-      emit(HomeScreenError(e.errorMessage));
-    }
+        emit(
+          (state as HomeScreenLoaded).copyWith(
+            userToUserRoute: path,
+            userIdToNavigateTo: userId,
+          ),
+        );
+      },
+      onError: (error, stackTrace) {
+        if (error is Exception) {
+          emit(HomeScreenError(error.errorMessage));
+        }
+      },
+    );
   }
 
   void stopCurrentNavigation() {
