@@ -36,8 +36,17 @@ jobs:
       - name: Format
         run: dart format --set-exit-if-changed .
 
-      - name: Configure Firebase
-        run: echo "${{ secrets.FIREBASE_OPTIONS }}" | base64 --decode > lib/firebase_options.dart
+      - name: Install and configure FlutterFire CLI
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/service-account.json"
+          flutterfire configure \
+            --project=where-i-m-at-app \
+            --platforms=ios \
+            --ios-bundle-id=com.sunadriann.whereimat \
+            --no-apply \
+            --yes
 
       - name: Analyze
         run: flutter analyze --no-pub
