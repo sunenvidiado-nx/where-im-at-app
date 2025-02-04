@@ -31,7 +31,7 @@ jobs:
 
       - name: Configure firebase
         run: |
-          npm install -g firebase-tools
+          curl -sL https://firebase.tools | bash
           dart pub global activate flutterfire_cli
           flutterfire configure \
             --project=where-i-m-at-app \
@@ -51,19 +51,18 @@ jobs:
       - name: Build Android
         run: flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols --build-number=${{ github.run_number }} --split-per-abi
 
-      - name: Upload Android build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-artifacts
-          path: build/app/outputs/flutter-apk/*.apk
-
       - name: Upload debug symbols to Firebase Crashlytics
-        working-directory: android
         run: |
           firebase crashlytics:symbols:upload \
             --token=${{ secrets.FIREBASE_CI_TOKEN }} \
             --app=${{ secrets.FIREBASE_ANDROID_APP_ID }} \
             build/app/outputs/symbols
+
+      - name: Upload Android build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: build/app/outputs/flutter-apk/*.apk
 
   build-ios:
     name: Build IPA
@@ -93,7 +92,7 @@ jobs:
 
       - name: Configure firebase
         run: |
-          npm install -g firebase-tools
+          curl -sL https://firebase.tools | bash
           dart pub global activate flutterfire_cli
           flutterfire configure \
             --project=where-i-m-at-app \

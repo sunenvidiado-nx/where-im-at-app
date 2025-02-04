@@ -216,7 +216,8 @@ class _UserInfoBottomSheetState extends State<UserInfoBottomSheet> {
               child: Text(
                 state.errorMessage,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.primary.withAlpha(170)),
+                      color: context.colorScheme.primary.withAlpha(170),
+                    ),
                 textAlign: TextAlign.center,
               ),
             ),
