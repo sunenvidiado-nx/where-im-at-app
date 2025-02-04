@@ -6,6 +6,10 @@
 
 - Improved error handling and exception management for enhanced stability
 
+### Fixed
+
+- Fixed issue where map markers were not rendering correctly on display
+
 ## [1.3.0]
 
 ### Added
