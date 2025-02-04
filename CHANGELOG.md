@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1]
+
+### Changed
+
+- Improved error handling and exception management for enhanced stability
+
 ## [1.3.0]
 
 ### Added
