@@ -29,16 +29,15 @@ jobs:
         run: |
           echo "${{ secrets.ENVIRONMENT }}" | base64 --decode > .env
 
-      - name: Install and configure FlutterFire CLI
+      - name: Configure firebase
         run: |
+          npm install -g firebase-tools
           dart pub global activate flutterfire_cli
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/service-account.json"
           flutterfire configure \
             --project=where-i-m-at-app \
             --platforms=android \
             --ios-bundle-id=com.sunadriann.whereimat \
-            --no-apply \
+            --token=${{ secrets.FIREBASE_CI_TOKEN }} \
             --yes
 
       - name: Download dependencies
@@ -58,19 +57,13 @@ jobs:
           name: android-artifacts
           path: build/app/outputs/flutter-apk/*.apk
 
-      - name: Upload Android debug symbols
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-debug-symbols
-          path: build/app/outputs/symbols
-          retention-days: 1
-
       - name: Upload debug symbols to Firebase Crashlytics
-        run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/service-account.json"
-          ./gradlew app:uploadCrashlyticsSymbolFile
         working-directory: android
+        run: |
+          firebase crashlytics:symbols:upload \
+            --token=${{ secrets.FIREBASE_CI_TOKEN }} \
+            --app=${{ secrets.FIREBASE_ANDROID_APP_ID }} \
+            build/app/outputs/symbols
 
   build-ios:
     name: Build IPA
@@ -98,16 +91,16 @@ jobs:
           flutter pub run build_runner build --delete-conflicting-outputs
           flutter gen-l10n
 
-      - name: Install and configure FlutterFire CLI
+      - name: Configure firebase
         run: |
+          npm install -g firebase-tools
           dart pub global activate flutterfire_cli
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS="$PWD/service-account.json"
           flutterfire configure \
             --project=where-i-m-at-app \
             --platforms=ios \
             --ios-bundle-id=com.sunadriann.whereimat \
-            --no-apply \
+            --service-account=service-account.json \
+            --token=${{ secrets.FIREBASE_CI_TOKEN }} \
             --yes
 
       - name: Build iOS
