@@ -26,7 +26,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
     this._userLocationRepository,
     this._userInfoRepository,
     this._backgroundService,
-  ) : super(const HomeScreenInitial());
+  ) : super(const HomeScreenState());
 
   final AuthService _authService;
   final LocationService _locationService;
@@ -50,11 +50,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
   Future<void> initialize() async {
     await guard(
       () async {
-        emit(const HomeScreenLoading());
+        emit(state.copyWith(isLoading: true));
         final userInfo = await _userInfoRepository.getUserInfo(_userId);
 
         if (userInfo == null) {
-          return emit(const HomeScreenShouldRedirectToSetUpProfile());
+          return emit(state.copyWith(shouldRedirectToSetUpProfile: true));
         }
 
         final currentLocation = await _locationService
@@ -64,7 +64,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
         final isBroadcastingLocation = await isUserBroadcastingLocation();
 
         emit(
-          HomeScreenLoaded(
+          state.copyWith(
             initialLocation: currentLocation,
             isBroadcastingLocation: isBroadcastingLocation,
             userLocations: const [],
@@ -81,29 +81,30 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
 
         _userLocationsStream = _userLocationRepository.streamUserLocations();
         _userLocationsSubscription = _userLocationsStream.listen((data) {
-          if (state is HomeScreenLoaded) {
-            emit((state as HomeScreenLoaded).copyWith(userLocations: data));
-          }
+          emit(state.copyWith(userLocations: data));
         });
       },
       onError: (error, stackTrace) {
         if (error is Exception) {
-          emit(HomeScreenError(error.errorMessage));
+          emit(
+            state.copyWith(
+              errorMessage: error.errorMessage,
+              isLoading: false,
+            ),
+          );
         }
       },
+      onSuccess: (_) => emit(state.copyWith(isLoading: false)),
     );
   }
 
   Future<void> broadcastCurrentLocation() async {
     await guard(
       () async {
-        final currentState = state;
-        if (currentState is! HomeScreenLoaded) return;
-
         _currentLocationStream = _locationService.streamCurrentLocation();
         _locationSubscription =
             _currentLocationStream.listen(_updateUserLocation);
-        emit(currentState.copyWith(isBroadcastingLocation: true));
+        emit(state.copyWith(isBroadcastingLocation: true));
         _backgroundService.startService();
       },
       onError: (error, stackTrace) async {
@@ -113,35 +114,32 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
   }
 
   Future<void> stopCurrentLocationBroadcast() async {
-    final loadedState = state as HomeScreenLoaded;
+    await guard(
+      () async {
+        emit(state.copyWith(isLoading: true));
+        _backgroundService.invoke('stopService');
+        stopCurrentNavigation();
 
-    emit(const HomeScreenLoading());
-    _backgroundService.invoke('stopService');
-    stopCurrentNavigation();
+        final finalLocation = await _locationService.getCurrentLocation();
 
-    final finalLocation = await _locationService.getCurrentLocation();
+        // Clean up subscriptions and update final location
+        await Future.wait([
+          _locationSubscription?.cancel() ?? Future.value(),
+          _userLocationRepository.createOrUpdate(
+            UserLocation(
+              id: _userId,
+              latitude: finalLocation.latitude,
+              longitude: finalLocation.longitude,
+              isBroadcasting: false,
+              updatedAt: DateTime.now(),
+            ),
+          ),
+        ]);
 
-    // Clean up subscriptions and update final location
-    await Future.wait([
-      _locationSubscription?.cancel() ?? Future.value(),
-      _userLocationRepository.createOrUpdate(
-        UserLocation(
-          id: _userId,
-          latitude: finalLocation.latitude,
-          longitude: finalLocation.longitude,
-          isBroadcasting: false,
-          updatedAt: DateTime.now(),
-        ),
-      ),
-    ]);
-
-    emit(
-      loadedState.copyWith(
-        isBroadcastingLocation: false,
-        // Refresh user locations after stopping broadcast to ensure UI
-        // shows latest state
-        userLocations: await _userLocationRepository.getUserLocations(),
-      ),
+        emit(state.copyWith(isBroadcastingLocation: false));
+      },
+      onSuccess: (_) => emit(state.copyWith(isLoading: false)),
+      onError: (_, __) => emit(state.copyWith(isLoading: false)),
     );
   }
 
@@ -158,7 +156,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
       },
       onError: (error, stackTrace) {
         if (error is Exception) {
-          emit(HomeScreenError(error.errorMessage));
+          emit(state.copyWith(errorMessage: error.errorMessage));
         }
       },
     );
@@ -167,8 +165,6 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
   }
 
   Future<void> startNavigatingToUser(String userId) async {
-    if (state is! HomeScreenLoaded) return;
-
     await guard(
       () async {
         final [destination, origin] = await Future.wait([
@@ -188,29 +184,18 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
           destination.latLong,
         );
 
-        emit(
-          (state as HomeScreenLoaded).copyWith(
-            userToUserRoute: path,
-            userIdToNavigateTo: userId,
-          ),
-        );
+        emit(state.copyWith(userToUserRoute: path, userIdToNavigateTo: userId));
       },
       onError: (error, stackTrace) {
         if (error is Exception) {
-          emit(HomeScreenError(error.errorMessage));
+          emit(state.copyWith(errorMessage: error.errorMessage));
         }
       },
     );
   }
 
   void stopCurrentNavigation() {
-    if (state is! HomeScreenLoaded) return;
-    emit(
-      (state as HomeScreenLoaded).copyWith(
-        userToUserRoute: null,
-        userIdToNavigateTo: null,
-      ),
-    );
+    emit(state.copyWith(userToUserRoute: null, userIdToNavigateTo: null));
   }
 
   Future<void> _updateUserLocation(Position position) async {
@@ -231,15 +216,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
   }
 
   bool isNavigatingToUser(String userId) {
-    final currentState = state;
-    if (currentState is! HomeScreenLoaded) return false;
-    return currentState.userIdToNavigateTo == userId;
+    return state.userIdToNavigateTo == userId;
   }
 
   bool isCurrentlyNavigating() {
-    final currentState = state;
-    if (currentState is! HomeScreenLoaded) return false;
-    return currentState.userIdToNavigateTo != null;
+    return state.userIdToNavigateTo != null;
   }
 
   @override

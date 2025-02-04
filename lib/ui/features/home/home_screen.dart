@@ -34,53 +34,48 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: BlocConsumer<HomeScreenCubit, HomeScreenState>(
         listener: _hadnleStateChange,
-        builder: (context, state) => switch (state) {
-          final HomeScreenLoaded state => InteractiveMap(
-              initialLocation: state.initialLocation,
-              userLocations: state.userLocations,
-              userToUserRoute: state.userToUserRoute,
-            ),
-          _ => const InteractiveMap(userLocations: []),
-        },
+        buildWhen: (previous, current) =>
+            previous.initialLocation != current.initialLocation ||
+            previous.userLocations != current.userLocations ||
+            previous.userToUserRoute != current.userToUserRoute,
+        builder: (context, state) => InteractiveMap(
+          initialLocation: state.initialLocation,
+          userLocations: state.userLocations,
+          userToUserRoute: state.userToUserRoute,
+        ),
       ),
       floatingActionButton: _buildFab(context),
     );
   }
 
   void _hadnleStateChange(BuildContext context, HomeScreenState state) {
-    if (state is HomeScreenError) {
-      context.showSnackbar(state.errorMessage, type: AppSnackbarType.error);
+    if (state.hasError) {
+      context.showSnackbar(state.errorMessage!, type: AppSnackbarType.error);
     }
 
-    if (state is HomeScreenShouldRedirectToSetUpProfile) {
+    if (state.shouldRedirectToSetUpProfile) {
       context.go(Routes.setUpProfile);
     }
   }
 
   Widget _buildFab(BuildContext context) {
-    return BlocSelector<HomeScreenCubit, HomeScreenState,
-        ({bool isLoading, bool isBroadcasting})>(
-      selector: (state) => (
-        isLoading: state is HomeScreenLoading,
-        isBroadcasting: switch (state) {
-          HomeScreenLoaded(:final isBroadcastingLocation) =>
-            isBroadcastingLocation,
-          _ => false,
-        },
-      ),
-      builder: (context, status) {
+    return BlocBuilder<HomeScreenCubit, HomeScreenState>(
+      buildWhen: (previous, current) =>
+          previous.isBroadcastingLocation != current.isBroadcastingLocation ||
+          previous.isLoading != current.isLoading,
+      builder: (context, state) {
         return FloatingActionButton(
-          onPressed: status.isLoading
+          onPressed: state.isLoading
               ? null
               : () {
-                  if (status.isBroadcasting) {
+                  if (state.isBroadcastingLocation) {
                     _cubit.stopCurrentLocationBroadcast();
                   } else {
                     _cubit.broadcastCurrentLocation();
                   }
                 },
           child: Icon(
-            status.isBroadcasting
+            state.isBroadcastingLocation
                 ? Icons.location_disabled_outlined
                 : Icons.my_location_outlined,
           ),
