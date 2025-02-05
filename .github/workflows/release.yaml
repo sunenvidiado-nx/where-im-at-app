@@ -36,7 +36,6 @@ jobs:
           flutterfire configure \
             --project=where-i-m-at-app \
             --platforms=android \
-            --ios-bundle-id=com.sunadriann.whereimat \
             --token=${{ secrets.FIREBASE_CI_TOKEN }} \
             --yes
 
@@ -98,7 +97,6 @@ jobs:
             --project=where-i-m-at-app \
             --platforms=ios \
             --ios-bundle-id=com.sunadriann.whereimat \
-            --service-account=service-account.json \
             --token=${{ secrets.FIREBASE_CI_TOKEN }} \
             --yes
 
