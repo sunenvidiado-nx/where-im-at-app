@@ -223,6 +223,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> with ExceptionHandler {
     return state.userIdToNavigateTo != null;
   }
 
+  Future<void> logOut() async {
+    await _authService.signOut();
+  }
+
   @override
   Future<void> close() async {
     _locationSubscription?.cancel();

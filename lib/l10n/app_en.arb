@@ -56,5 +56,8 @@
   "navigationWarningMessage": "Starting navigation to this user's location will cancel your current navigation. Would you like to proceed?",
   "getDirectionsButton": "Get directions",
   "cancelButton": "Cancel",
-  "userInfoButtonStopNavigating": "Stop navigation"
+  "userInfoButtonStopNavigating": "Stop navigation",
+  "logOut": "Log out",
+  "confirmLogoutMessage": "Ready to log out?",
+  "confirmLogoutButton": "Yes, log me out"
 }
